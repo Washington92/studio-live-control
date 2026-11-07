@@ -197,16 +197,18 @@
   pointer-events: none !important;
 }
 
-/* Responsive dock: one column on phones, proportional spans on larger screens.
-   Saved desktop dimensions never force horizontal overflow on small viewports. */
-.wmix-dock-panel { grid-column: 1 / -1; }
-@media (min-width: 768px) {
-  .wmix-dock-panel { grid-column: span min(6, var(--wmix-columns)) / span min(6, var(--wmix-columns)); }
-}
-@media (min-width: 1024px) {
-  .wmix-dock-panel { grid-column: span var(--wmix-columns) / span var(--wmix-columns); }
+/* Flexible dock: precise pixel resizing, responsive width, no grid-column snapping. */
+.wmix-dock-panel {
+  flex: 0 0 calc(var(--wmix-width, 33.333%) - 8px);
+  max-width: 100%;
+  min-width: 180px;
 }
 @media (max-width: 767px) {
-  .wmix-dock-panel { height: auto !important; min-height: 0 !important; }
-  .wmix-dock-panel > div:last-of-type { min-height: 160px; }
+  .wmix-dock-panel {
+    flex-basis: 100%;
+    min-width: 0;
+    height: auto !important;
+    min-height: 110px !important;
+  }
+  .wmix-dock-panel > div:last-of-type { min-height: 0 !important; }
 }
