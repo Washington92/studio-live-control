@@ -452,6 +452,7 @@ export function Studio() {
               <span className="mr-2 font-mono text-[10px] tracking-widest text-muted-foreground">ENTRADAS · {inputs.length}</span>
               <button type="button" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className={cn("rounded-sm border px-2 py-1 font-mono text-[10px] font-bold", inputsActionsOpen ? "border-primary text-primary" : "border-border bg-secondary text-muted-foreground")}>INPUTS</button>
               {inputsActionsOpen && (
+                <>
               <AddBtn icon={Camera} label="Webcam" onClick={addCamera} />
               <AddBtn icon={Monitor} label="Tela" onClick={addScreen} />
               <AddBtn icon={Film} label="Vídeo" onClick={() => fileRef.current?.click()} />
@@ -459,6 +460,7 @@ export function Studio() {
               <AddBtn icon={Globe} label="Web" onClick={() => addInput(mkInput("web", "Fonte Web"))} />
               <AddBtn icon={Plus} label="Câm. Sim" onClick={() => addInput(mkInput("sim", `Câmera ${inputs.length + 1}`, Math.floor(Math.random() * 360)))} />
               <input ref={fileRef} type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ""; }} />
+                </>
               )}
               <span className="ml-auto font-mono text-[9px] text-muted-foreground">1-9 PVW · ⇧1-9 PGM · ESPAÇO CUT · ENTER AUTO · B FTB</span>
             </div>
