@@ -272,7 +272,7 @@ export function Studio() {
               <input type="number" min={100} max={10000} step={100} value={dur} onChange={(e) => setDur(Math.max(100, Number(e.target.value)))} className="w-16 rounded-sm border border-border bg-input-bg px-1 text-right text-foreground" />
               ms
             </label>
-            <div className="flex flex-1 items-center justify-center gap-3">
+            <div className="flex h-[130px] items-center justify-center gap-3">
               <div className="flex h-full flex-col justify-between py-1 font-mono text-[9px] text-muted-foreground"><span>100</span><span>50</span><span>0</span></div>
               <input type="range" min={0} max={1} step={0.001} value={progress} onChange={(e) => onTbar(Number(e.target.value))} className="tbar" aria-label="T-Bar" />
               <div className="font-mono text-xs text-foreground">{Math.round(progress * 100)}%</div>
@@ -370,8 +370,7 @@ export function Studio() {
         <Dot ok /> REF 29.97 Hz
         <Dot ok={tele.dropped === 0} /> SINC VÍDEO {tele.dropped === 0 ? "OK" : `${tele.dropped} DROP`}
         <span>ÁUDIO 48 kHz · 24-bit · 2.0</span>
-        <span className="flex items-center gap-1">MASTER <span className="inline-flex h-2 w-24 rotate-90 origin-center scale-y-100" style={{ display: "none" }} />
-          <span className="relative h-2 w-28 overflow-hidden rounded-sm bg-meter-bg"><span className="absolute inset-y-0 left-0 bg-meter-h" style={{ width: `${Math.min(100, ((20 * Math.log10(Math.max(levels.master?.rms ?? 0, 1e-6)) + 60) / 66) * 100)}%` }} /></span>
+        <span className="flex items-center gap-1">MASTER           <span className="relative h-2 w-28 overflow-hidden rounded-sm bg-meter-bg"><span className="absolute inset-y-0 left-0 bg-meter-h" style={{ width: `${Math.min(100, ((20 * Math.log10(Math.max(levels.master?.rms ?? 0, 1e-6)) + 60) / 66) * 100)}%` }} /></span>
         </span>
         {anySolo && <span className="rounded-sm bg-warn px-1 font-bold text-warn-foreground">SOLO ATIVO</span>}
         {ftb && <span className="rounded-sm bg-pgm px-1 font-bold text-pgm-foreground">FTB</span>}
@@ -406,7 +405,7 @@ function MonitorBox({ title, tone, source, safe, children }: { title: string; to
       <div className={cn("flex items-center justify-between px-2 py-0.5 font-mono text-[11px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
         <span>{title}</span><span className="truncate">{source}</span>
       </div>
-      <div className="relative aspect-video">
+      <div className="relative mx-auto aspect-video h-[min(38vh,calc((50vw-110px)*0.5625))]">
         {children}
         {safe && (
           <>

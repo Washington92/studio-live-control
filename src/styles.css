@@ -176,7 +176,7 @@
     background: var(--color-input-bg); padding: 0 .375rem; font-size: 11px; color: var(--color-foreground);
   }
   .tbar, .fader { writing-mode: vertical-lr; direction: rtl; appearance: none; background: transparent; cursor: ns-resize; }
-  .tbar { height: 100%; min-height: 150px; width: 36px; }
+  .tbar { height: 130px; width: 36px; }
   .fader { height: 100%; width: 24px; }
   .tbar::-webkit-slider-runnable-track, .fader::-webkit-slider-runnable-track { width: 6px; background: var(--color-meter-bg); border: 1px solid var(--color-border); border-radius: 2px; }
   .tbar::-webkit-slider-thumb { appearance: none; width: 36px; height: 22px; margin-left: -16px; border-radius: 3px; background: linear-gradient(var(--color-foreground), var(--color-muted-foreground)); border: 1px solid var(--color-border); }
