@@ -594,27 +594,27 @@ export function Studio() {
           );
         })()}
         <DockPanel id="dsk" title="DSK · OVERLAYS" order={dockOrder.indexOf("dsk")} size={dockSizes.dsk} onResize={resizeDock} dragging={draggingPanel === "dsk"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<div className="flex min-h-0 flex-col gap-1.5 overflow-auto rounded-md border border-border bg-panel p-2">
-            <div className="font-sans text-[10px] tracking-widest text-muted-foreground">DSK · OVERLAYS</div>
+<div className="flex min-h-0 flex-col gap-2 overflow-auto rounded-lg bg-panel p-2.5">
+            <div className="flex items-center justify-between gap-2 pr-7"><span className="text-xs font-semibold tracking-wide text-foreground">Overlays</span><span className="rounded-full border border-border bg-secondary/70 px-2 py-0.5 text-[10px] text-muted-foreground">{[dsk.lowerThird.on, dsk.score.on, dsk.pip.on, dsk.logo.on].filter(Boolean).length} ativos</span></div>
             <DskRow n={1} label="Lower Third" on={dsk.lowerThird.on} onToggle={() => setDsk((d) => ({ ...d, lowerThird: { ...d.lowerThird, ...lt, on: !d.lowerThird.on } }))}>
-              <input className="field" value={lt.name} onChange={(e) => setLt({ ...lt, name: e.target.value })} placeholder="Nome" />
-              <input className="field" value={lt.title} onChange={(e) => setLt({ ...lt, title: e.target.value })} placeholder="Cargo" />
+              <input aria-label="Nome do lower third" className="field" value={lt.name} onChange={(e) => setLt({ ...lt, name: e.target.value })} placeholder="Nome" />
+              <input aria-label="Cargo do lower third" className="field" value={lt.title} onChange={(e) => setLt({ ...lt, title: e.target.value })} placeholder="Cargo" />
             </DskRow>
             <DskRow n={2} label="Placar" on={dsk.score.on} onToggle={() => setDsk((d) => ({ ...d, score: { ...d.score, on: !d.score.on } }))}>
-              <div className="grid grid-cols-[1fr_auto_auto_1fr] items-center gap-1">
-                <input className="field" value={dsk.score.home} onChange={(e) => setDsk((d) => ({ ...d, score: { ...d.score, home: e.target.value } }))} />
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] items-center gap-1.5">
+                <input aria-label="Equipe da casa" className="field min-w-0" value={dsk.score.home} onChange={(e) => setDsk((d) => ({ ...d, score: { ...d.score, home: e.target.value } }))} />
                 <ScoreBtn v={dsk.score.homeScore} set={(v) => setDsk((d) => ({ ...d, score: { ...d.score, homeScore: v } }))} />
                 <ScoreBtn v={dsk.score.awayScore} set={(v) => setDsk((d) => ({ ...d, score: { ...d.score, awayScore: v } }))} />
-                <input className="field" value={dsk.score.away} onChange={(e) => setDsk((d) => ({ ...d, score: { ...d.score, away: e.target.value } }))} />
+                <input aria-label="Equipe visitante" className="field min-w-0" value={dsk.score.away} onChange={(e) => setDsk((d) => ({ ...d, score: { ...d.score, away: e.target.value } }))} />
               </div>
             </DskRow>
             <DskRow n={3} label="PiP" on={dsk.pip.on} onToggle={() => setDsk((d) => ({ ...d, pip: { ...d.pip, on: !d.pip.on } }))}>
-              <select className="field" value={dsk.pip.inputId} onChange={(e) => setDsk((d) => ({ ...d, pip: { ...d.pip, inputId: e.target.value } }))}>
+              <select aria-label="Fonte do picture in picture" className="field" value={dsk.pip.inputId} onChange={(e) => setDsk((d) => ({ ...d, pip: { ...d.pip, inputId: e.target.value } }))}>
                 {inputs.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
               </select>
             </DskRow>
             <DskRow n={4} label="Logo / Bug" on={dsk.logo.on} onToggle={() => setDsk((d) => ({ ...d, logo: { ...d.logo, on: !d.logo.on } }))}>
-              <input className="field" value={dsk.logo.text} maxLength={4} onChange={(e) => setDsk((d) => ({ ...d, logo: { ...d.logo, text: e.target.value } }))} />
+              <input aria-label="Texto do logo" className="field" value={dsk.logo.text} maxLength={4} onChange={(e) => setDsk((d) => ({ ...d, logo: { ...d.logo, text: e.target.value } }))} />
             </DskRow>
           </div>
         </DockPanel>
@@ -822,13 +822,16 @@ function AddBtn({ icon: Icon, label, onClick }: { icon: typeof Camera; label: st
 }
 function DskRow({ n, label, on, onToggle, children }: { n: number; label: string; on: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
-    <div className={cn("flex flex-col gap-1 rounded-md border p-1.5", on ? "border-pgm bg-pgm/10" : "border-border")}>
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-[10px] text-muted-foreground">DSK{n}</span>
-        <span className="flex-1 text-xs font-semibold">{label}</span>
-        <button onClick={onToggle} className={cn("h-6 w-14 rounded-md border text-[10px] font-bold", on ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>{on ? "ON AIR" : "TAKE"}</button>
+    <div className={cn("flex min-w-0 flex-col gap-2 rounded-xl border p-2.5 transition-colors", on ? "border-pgm/50 bg-pgm/5" : "border-border/70 bg-panel-strong/40")}>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold tabular-nums", on ? "bg-pgm/15 text-pgm" : "bg-secondary text-muted-foreground")}>{n.toString().padStart(2, "0")}</span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-xs font-semibold text-foreground">{label}</span>
+          <span className={cn("text-[10px]", on ? "text-pgm" : "text-muted-foreground")}>{on ? "No ar" : "Pronto para exibir"}</span>
+        </div>
+        <button type="button" onClick={onToggle} aria-pressed={on} aria-label={`${on ? "Desativar" : "Exibir"} ${label}`} className={cn("h-7 min-w-16 shrink-0 rounded-lg border px-2 text-[10px] font-bold tracking-wide transition-colors", on ? "border-pgm bg-pgm text-pgm-foreground hover:opacity-90" : "border-border bg-secondary text-foreground hover:bg-accent")}>{on ? "NO AR" : "EXIBIR"}</button>
       </div>
-      {children}
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
