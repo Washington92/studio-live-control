@@ -443,7 +443,7 @@ export function Studio() {
       )}
 
       <main className="min-h-0 min-w-0 flex-1 overflow-auto p-2">
-        <div className="wmix-dock-grid grid grid-cols-1 items-start gap-2 md:grid-cols-6 lg:grid-cols-12">
+        <div className="wmix-dock-grid flex flex-wrap items-start gap-2">
         <DockPanel id="preview" title="PREVIEW" order={dockOrder.indexOf("preview")} size={dockSizes.preview} onResize={resizeDock} dragging={draggingPanel === "preview"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <MonitorBox title="PREVIEW" tone="pvw" source={nameOf(pvw)} safe={safe}><canvas ref={pvwRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
         </DockPanel>
@@ -670,7 +670,7 @@ const DOCK_IDS = ["preview", "transitions", "program", "inputs", "dsk", "mixer"]
 type DockId = (typeof DOCK_IDS)[number];
 const DOCK_STORAGE_KEY = "wmix:studio-dock-layout:v1";
 const DOCK_SIZES_KEY = "wmix:studio-dock-sizes:v1";
-type DockSize = { columns: number; height: number | null };
+type DockSize = { columns: number; height: number | null; width?: number };
 type DockSizes = Record<DockId, DockSize>;
 const DEFAULT_DOCK_SIZES: DockSizes = {
   preview: { columns: 4, height: 270 },
@@ -691,7 +691,9 @@ function readDockSizes(): DockSizes {
       if (!item || typeof item !== "object") continue;
       const { columns, height } = item as Partial<DockSize>;
       if (typeof columns === "number" && Number.isInteger(columns) && columns >= 2 && columns <= 12) defaults[id].columns = columns;
-      if (typeof height === "number" && Number.isFinite(height)) defaults[id].height = Math.max(160, Math.min(1200, height));
+      if (typeof height === "number" && Number.isFinite(height)) defaults[id].height = Math.max(110, Math.min(1200, height));
+      const width = (item as Partial<DockSize>).width;
+      if (typeof width === "number" && Number.isFinite(width)) defaults[id].width = Math.max(180, Math.min(1600, width));
     }
   } catch { /* Invalid or inaccessible storage: use defaults. */ }
   return defaults;
@@ -737,15 +739,14 @@ function DockPanel({
     const start = resizeStart.current;
     if (!start) return;
     const deltaX = event.clientX - start.x;
-    const columnWidth = Math.max(35, start.width / start.size.columns);
-    const columns = Math.max(2, Math.min(12, Math.round(start.size.columns + deltaX / columnWidth)));
-    const height = Math.max(160, Math.min(1200, Math.round(start.height + event.clientY - start.y)));
-    onResize(id, { columns, height });
+    const width = Math.max(180, Math.min(1600, Math.round(start.width + deltaX)));
+    const height = Math.max(110, Math.min(1200, Math.round(start.height + event.clientY - start.y)));
+    onResize(id, { ...start.size, width, height });
   };
   return (
     <section
       className={cn("wmix-dock-panel relative flex min-w-0 flex-col rounded-sm border border-border bg-panel", dragging && "opacity-50")}
-      style={{ order, height: size.height ?? (id === "preview" || id === "program" ? 270 : undefined), minHeight: 160, "--wmix-columns": size.columns } as CSSProperties}
+      style={{ order, height: size.height ?? (id === "preview" || id === "program" ? 270 : undefined), minHeight: 110, "--wmix-columns": size.columns, "--wmix-width": size.width ? `${size.width}px` : `${size.columns / 12 * 100}%` } as CSSProperties}
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
       onDrop={(event) => onDrop(event, id)}
     >
