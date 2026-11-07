@@ -1,5 +1,5 @@
 export type SourceKind = "bars" | "sim" | "web" | "camera" | "screen" | "file";
-export type TransitionType = "MIX" | "FADE" | "SLIDE" | "WIPE" | "STINGER";
+export type TransitionType = "MIX" | "FADE" | "SLIDE" | "WIPE" | "STINGER" | "PUSH" | "ZOOM" | "BLUR" | "CIRCLE WIPE" | "FLIP";
 
 export interface Input {
   id: string;
@@ -119,6 +119,48 @@ export function composite(
       ctx.drawImage(a, 0, 0, w, h);
       ctx.save(); ctx.beginPath(); ctx.rect(0, 0, p * w, h); ctx.clip(); ctx.drawImage(b, 0, 0, w, h); ctx.restore();
       ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.fillRect(p * w - 2, 0, 3, h); break;
+    case "PUSH":
+      ctx.drawImage(a, -e * w, 0, w, h);
+      ctx.drawImage(b, (1 - e) * w, 0, w, h);
+      break;
+    case "ZOOM":
+      ctx.drawImage(a, 0, 0, w, h);
+      ctx.save();
+      ctx.globalAlpha = p;
+      const scale = 0.65 + 0.35 * e;
+      ctx.translate(w / 2, h / 2);
+      ctx.scale(scale, scale);
+      ctx.drawImage(b, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      break;
+    case "BLUR": {
+      const radius = Math.round(18 * Math.sin(Math.PI * p));
+      ctx.save();
+      ctx.filter = radius > 0 ? `blur(${radius}px)` : "none";
+      ctx.drawImage(a, 0, 0, w, h);
+      ctx.globalAlpha = p;
+      ctx.drawImage(b, 0, 0, w, h);
+      ctx.restore();
+      break;
+    }
+    case "CIRCLE WIPE":
+      ctx.drawImage(a, 0, 0, w, h);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(w / 2, h / 2, Math.hypot(w, h) * p / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(b, 0, 0, w, h);
+      ctx.restore();
+      break;
+    case "FLIP": {
+      const xScale = Math.abs(Math.cos(Math.PI * p));
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.scale(Math.max(0.001, xScale), 1);
+      ctx.drawImage(p < 0.5 ? a : b, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      break;
+    }
     case "STINGER": {
       ctx.drawImage(p < 0.5 ? a : b, 0, 0, w, h);
       const x = -w * 0.6 + p * w * 2.2;
