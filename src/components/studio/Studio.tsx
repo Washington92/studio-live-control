@@ -512,9 +512,16 @@ export function Studio() {
                       <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
                     </div>
                     <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
-                      <button type="button" aria-pressed={!audio.afv} title="Áudio próprio: independente da troca de câmeras (AFV desligado)"
-                        onClick={() => updateInputAudio(inp.id, { afv: !audio.afv })}
-                        className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", !audio.afv ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground")}>ÁUDIO PRÓPRIO</button>
+                      <label className="flex min-w-0 flex-1 items-center gap-1.5" title="Volume individual da entrada">
+                        <span className="shrink-0 font-mono text-[9px] text-muted-foreground">VOL</span>
+                        <input type="range" min={0} max={1000} step={1}
+                          value={Math.round(audio.fader * 1000)}
+                          onChange={(event) => updateInputAudio(inp.id, { fader: Number(event.target.value) / 1000 })}
+                          onDoubleClick={() => updateInputAudio(inp.id, { fader: 0.75 })}
+                          aria-label={`Volume de ${inp.name}`}
+                          className="h-2 min-w-0 flex-1 cursor-pointer accent-primary" />
+                        <span className="w-9 shrink-0 text-right font-mono text-[9px] tabular-nums text-muted-foreground">{audio.fader === 0 ? "-∞" : faderToDb(audio.fader).toFixed(0)} dB</span>
+                      </label>
                       <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
                         onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
                         className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTED" : "MUTE"}</button>
