@@ -673,9 +673,9 @@ const DOCK_SIZES_KEY = "wmix:studio-dock-sizes:v1";
 type DockSize = { columns: number; height: number | null };
 type DockSizes = Record<DockId, DockSize>;
 const DEFAULT_DOCK_SIZES: DockSizes = {
-  preview: { columns: 4, height: null },
+  preview: { columns: 4, height: 270 },
   transitions: { columns: 4, height: null },
-  program: { columns: 4, height: null },
+  program: { columns: 4, height: 270 },
   inputs: { columns: 8, height: 300 },
   dsk: { columns: 4, height: 300 },
   mixer: { columns: 8, height: 310 },
@@ -745,7 +745,7 @@ function DockPanel({
   return (
     <section
       className={cn("wmix-dock-panel relative flex min-w-0 flex-col rounded-sm border border-border bg-panel", dragging && "opacity-50")}
-      style={{ order, height: size.height ?? undefined, minHeight: 160, "--wmix-columns": size.columns } as CSSProperties}
+      style={{ order, height: size.height ?? (id === "preview" || id === "program" ? 270 : undefined), minHeight: 160, "--wmix-columns": size.columns } as CSSProperties}
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
       onDrop={(event) => onDrop(event, id)}
     >
@@ -794,11 +794,12 @@ function Timer({ label, since, now }: { label: string; since: number | null; now
 }
 function MonitorBox({ title, tone, source, safe, children }: { title: string; tone: "pvw" | "pgm"; source: string; safe: boolean; children: React.ReactNode }) {
   return (
-    <div className={cn("flex flex-col overflow-hidden rounded-sm border-2 bg-black", tone === "pgm" ? "border-pgm" : "border-pvw")}>
-      <div className={cn("flex items-center justify-between px-2 py-0.5 font-sans text-[10px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
+    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-sm border-2 bg-black", tone === "pgm" ? "border-pgm" : "border-pvw")}>
+      <div className={cn("flex shrink-0 items-center justify-between gap-2 px-2 py-0.5 font-sans text-[10px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
         <span>{title}</span><span className="truncate">{source}</span>
       </div>
-      <div className="relative mx-auto aspect-video w-full max-w-full">
+      <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden">
+        <div className="relative aspect-video h-full max-h-full max-w-full overflow-hidden [&>canvas]:absolute [&>canvas]:inset-0 [&>canvas]:h-full [&>canvas]:w-full">
         {children}
         {safe && (
           <>
@@ -808,6 +809,7 @@ function MonitorBox({ title, tone, source, safe, children }: { title: string; to
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-safe" />
           </>
         )}
+        </div>
       </div>
     </div>
   );
