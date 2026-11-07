@@ -410,10 +410,10 @@ export function Studio() {
         <div className="hidden flex-1 sm:block" />
         <Timer label="REC" since={rec} now={now} tone="pgm" />
         <Timer label="LIVE" since={live} now={now} tone="pgm" />
-        <button onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-sm border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
+        <button onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
           {rec ? <Square className="h-3 w-3 fill-current" /> : <Circle className="h-3 w-3 fill-pgm text-pgm" />} {rec ? "PARAR REC" : "GRAVAR"}
         </button>
-        <button disabled={whipBusy} onClick={() => { if (live) void stopWhip(); else setWhipSettingsOpen(true); }} className={cn("flex h-8 items-center gap-2 rounded-sm border px-3 text-xs font-bold tracking-wider", live ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
+        <button disabled={whipBusy} onClick={() => { if (live) void stopWhip(); else setWhipSettingsOpen(true); }} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", live ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
           <Radio className="h-4 w-4" /> {live ? "NO AR" : "TRANSMITIR"}
         </button>
       </header>
@@ -425,16 +425,16 @@ export function Studio() {
             <p className="text-xs text-muted-foreground">Transmite o Program e o áudio Master para um destino WHIP HTTPS. RTMP/RTMPS (YouTube) ainda não está disponível nesta versão.</p>
             <label className="block space-y-1 text-xs">
               <span>URL WHIP (HTTPS)</span>
-              <input className="w-full rounded-sm border border-border bg-input-bg p-2 text-foreground" type="url" value={whipEndpoint} onChange={(event) => setWhipEndpoint(event.target.value)} placeholder="https://servidor.exemplo/whip" autoComplete="off" />
+              <input className="w-full rounded-md border border-border bg-input-bg p-2 text-foreground" type="url" value={whipEndpoint} onChange={(event) => setWhipEndpoint(event.target.value)} placeholder="https://servidor.exemplo/whip" autoComplete="off" />
             </label>
             <label className="block space-y-1 text-xs">
               <span>Token Bearer (opcional)</span>
-              <input className="w-full rounded-sm border border-border bg-input-bg p-2 text-foreground" type="password" value={whipToken} onChange={(event) => setWhipToken(event.target.value)} placeholder="Não será armazenado" autoComplete="off" />
+              <input className="w-full rounded-md border border-border bg-input-bg p-2 text-foreground" type="password" value={whipToken} onChange={(event) => setWhipToken(event.target.value)} placeholder="Não será armazenado" autoComplete="off" />
             </label>
-            {whipError && <p role="alert" className="rounded-sm border border-pgm p-2 text-xs text-pgm">{whipError}</p>}
+            {whipError && <p role="alert" className="rounded-md border border-pgm p-2 text-xs text-pgm">{whipError}</p>}
             <div className="flex justify-end gap-2">
-              <button type="button" disabled={whipBusy} className="rounded-sm border border-border bg-secondary px-3 py-2 text-xs" onClick={() => { setWhipSettingsOpen(false); setWhipError(""); setWhipToken(""); }}>Cancelar</button>
-              <button type="button" disabled={whipBusy || !whipEndpoint.trim()} className="rounded-sm bg-pgm px-3 py-2 text-xs font-bold text-pgm-foreground disabled:opacity-50" onClick={() => void startWhip()}>
+              <button type="button" disabled={whipBusy} className="rounded-md border border-border bg-secondary px-3 py-2 text-xs" onClick={() => { setWhipSettingsOpen(false); setWhipError(""); setWhipToken(""); }}>Cancelar</button>
+              <button type="button" disabled={whipBusy || !whipEndpoint.trim()} className="rounded-md bg-pgm px-3 py-2 text-xs font-bold text-pgm-foreground disabled:opacity-50" onClick={() => void startWhip()}>
                 {whipBusy ? "Conectando..." : "Iniciar transmissão"}
               </button>
             </div>
@@ -448,20 +448,20 @@ export function Studio() {
 <MonitorBox title="PREVIEW" tone="pvw" source={nameOf(pvw)} safe={safe}><canvas ref={pvwRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
         </DockPanel>
         <DockPanel id="transitions" title="TRANSIÇÕES" order={dockOrder.indexOf("transitions")} size={dockSizes.transitions} onResize={resizeDock} dragging={draggingPanel === "transitions"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<div className="flex flex-col gap-1.5 rounded-sm border border-border bg-panel p-2">
+<div className="flex flex-col gap-1.5 rounded-md border border-border bg-panel p-2">
             <div className="text-center font-sans text-[10px] tracking-widest text-muted-foreground">TRANSIÇÃO</div>
             <div className="grid grid-cols-2 gap-1">
-              <button onClick={cut} className="h-9 rounded-sm border border-border bg-secondary text-xs font-bold hover:bg-accent">CUT</button>
-              <button onClick={doAuto} className={cn("h-9 rounded-sm border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
+              <button onClick={cut} className="h-9 rounded-md border border-border bg-secondary text-xs font-bold hover:bg-accent">CUT</button>
+              <button onClick={doAuto} className={cn("h-9 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
             </div>
             <div className="grid grid-cols-3 gap-1">
               {TRANSITIONS.map((t) => (
-                <button key={t} onClick={() => setTrType(t)} className={cn("h-6 rounded-sm border text-[10px] font-bold", trType === t ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>{t}</button>
+                <button key={t} onClick={() => setTrType(t)} className={cn("h-6 rounded-md border text-[10px] font-bold", trType === t ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>{t}</button>
               ))}
             </div>
             <label className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
               DURAÇÃO
-              <input type="number" min={100} max={10000} step={100} value={dur} onChange={(e) => setDur(Math.max(100, Number(e.target.value)))} className="w-16 rounded-sm border border-border bg-input-bg px-1 text-right text-foreground" />
+              <input type="number" min={100} max={10000} step={100} value={dur} onChange={(e) => setDur(Math.max(100, Number(e.target.value)))} className="w-16 rounded-md border border-border bg-input-bg px-1 text-right text-foreground" />
               ms
             </label>
             <div className="flex h-[130px] items-center justify-center gap-3">
@@ -469,20 +469,20 @@ export function Studio() {
               <input type="range" min={0} max={1} step={0.001} value={progress} onChange={(e) => onTbar(Number(e.target.value))} className="tbar" aria-label="T-Bar" />
               <div className="font-mono text-xs text-foreground">{Math.round(progress * 100)}%</div>
             </div>
-            <button onClick={() => setFtb((f) => !f)} className={cn("h-8 rounded-sm border text-xs font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</button>
-            <button onClick={() => setSafe((s) => !s)} className={cn("h-6 rounded-sm border text-[10px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
+            <button onClick={() => setFtb((f) => !f)} className={cn("h-8 rounded-md border text-xs font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</button>
+            <button onClick={() => setSafe((s) => !s)} className={cn("h-6 rounded-md border text-[10px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
           </div>
         </DockPanel>
         <DockPanel id="program" title="PROGRAM" order={dockOrder.indexOf("program")} size={dockSizes.program} onResize={resizeDock} dragging={draggingPanel === "program"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <MonitorBox title="PROGRAM" tone="pgm" source={nameOf(pgm)} safe={safe}><canvas ref={pgmRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
         </DockPanel>
         <DockPanel id="inputs" title="ENTRADAS" order={dockOrder.indexOf("inputs")} size={dockSizes.inputs} onResize={resizeDock} dragging={draggingPanel === "inputs"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<div className="flex min-h-0 flex-col rounded-sm border border-border bg-panel font-sans text-xs">
+<div className="flex min-h-0 flex-col rounded-md border border-border bg-panel font-sans text-xs">
             <div className="flex items-center gap-1 border-b border-border px-2 py-1">
               <span className="mr-2 text-xs font-semibold tracking-wide text-muted-foreground">ENTRADAS · {inputs.length}</span>
-              <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-sm border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></button>
-              <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-sm border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></button>
-              <button type="button" aria-label="Configurações da fonte selecionada" title="Renomear fonte selecionada" disabled={!selectedInputId} onClick={configureSelectedInput} className="rounded-sm border border-border bg-secondary p-1 hover:text-primary disabled:opacity-40"><Settings className="h-4 w-4" /></button>
+              <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-md border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></button>
+              <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-md border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></button>
+              <button type="button" aria-label="Configurações da fonte selecionada" title="Renomear fonte selecionada" disabled={!selectedInputId} onClick={configureSelectedInput} className="rounded-md border border-border bg-secondary p-1 hover:text-primary disabled:opacity-40"><Settings className="h-4 w-4" /></button>
               {inputsActionsOpen && (
                 <>
               <AddBtn icon={Camera} label="Webcam" onClick={addCamera} />
@@ -501,12 +501,12 @@ export function Studio() {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
-                  <div key={inp.id} className={cn("group overflow-hidden rounded-sm border-2 bg-panel-strong", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
+                  <div key={inp.id} className={cn("group overflow-hidden rounded-md border-2 bg-panel-strong", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
                     <div className="flex items-stretch bg-black">
                       <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block aspect-video min-w-0 flex-1 bg-black">
                         <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="h-full w-full" />
-                        <span className="absolute left-1 top-1 rounded-sm bg-background/80 px-1 text-[10px] font-semibold">{i + 1}</span>
-                        {tally && <span className={cn("absolute right-1 top-1 rounded-sm px-1 text-[10px] font-semibold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
+                        <span className="absolute left-1 top-1 rounded-md bg-background/80 px-1 text-[10px] font-semibold">{i + 1}</span>
+                        {tally && <span className={cn("absolute right-1 top-1 rounded-md px-1 text-[10px] font-semibold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
                         <div className="absolute bottom-1 right-1 flex h-8 gap-px"><Meter level={levels[inp.id]} className="w-1" /></div>
                       </button>
                       <div className="flex w-8 shrink-0 flex-col items-center gap-1 border-l border-border bg-panel px-1 py-1">
@@ -525,16 +525,16 @@ export function Studio() {
                     <div className="flex items-center gap-1 px-1.5 py-1">
                       <Icon className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="flex-1 truncate text-xs font-medium">{inp.name}</span>
-                      <button onClick={() => setPgm(inp.id)} className="rounded-sm bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
+                      <button onClick={() => setPgm(inp.id)} className="rounded-md bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
                       <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
                     </div>
                     <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
                       <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
                         onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
-                        className={cn("rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</button>
+                        className={cn("rounded-md border px-1.5 py-0.5 text-[10px] font-semibold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</button>
                       <button type="button" title="Configurações da entrada" aria-label={`Configurações de ${inp.name}`}
                         onClick={() => { setSettingsInputId(inp.id); setSettingsTab("geral"); }}
-                        className="ml-auto rounded-sm border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
+                        className="ml-auto rounded-md border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
                     </div>
                   </div>
                 );
@@ -552,20 +552,20 @@ export function Studio() {
               <section role="dialog" aria-modal="true" aria-label={`Configurações de ${input.name}`} className="flex w-full max-w-lg flex-col gap-3 rounded-md border border-border bg-panel p-4 font-sans text-xs leading-relaxed shadow-2xl">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0"><div className="text-sm font-semibold tracking-wide">CONFIGURAÇÕES DA ENTRADA</div><div className="truncate text-xs text-muted-foreground">{input.name}</div></div>
-                  <button type="button" onClick={() => setSettingsInputId(null)} className="rounded-sm border border-border px-2 py-1 text-xs font-medium">FECHAR</button>
+                  <button type="button" onClick={() => setSettingsInputId(null)} className="rounded-md border border-border px-2 py-1 text-xs font-medium">FECHAR</button>
                 </div>
                 <div className="flex flex-wrap gap-1 border-b border-border pb-2">
                   {(["geral", "audio", "video", "avancado"] as const).map((tab) => (
-                    <button type="button" key={tab} onClick={() => setSettingsTab(tab)} className={cn("rounded-sm border px-3 py-1.5 text-xs font-medium uppercase", settingsTab === tab ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary")}>{tab === "audio" ? "Áudio" : tab === "avancado" ? "Avançado" : tab === "video" ? "Vídeo" : "Geral"}</button>
+                    <button type="button" key={tab} onClick={() => setSettingsTab(tab)} className={cn("rounded-md border px-3 py-1.5 text-xs font-medium uppercase", settingsTab === tab ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary")}>{tab === "audio" ? "Áudio" : tab === "avancado" ? "Avançado" : tab === "video" ? "Vídeo" : "Geral"}</button>
                   ))}
                 </div>
                 {settingsTab === "geral" && <div className="flex flex-col gap-3">
                   <label className="flex flex-col gap-1 text-xs">Nome da entrada
-                    <input className="rounded-sm border border-border bg-background p-2 text-xs" value={input.name} maxLength={80} onChange={(event) => setInputs((current) => current.map((item) => item.id === input.id ? { ...item, name: event.target.value } : item))} />
+                    <input className="rounded-md border border-border bg-background p-2 text-xs" value={input.name} maxLength={80} onChange={(event) => setInputs((current) => current.map((item) => item.id === input.id ? { ...item, name: event.target.value } : item))} />
                   </label>
                   <div className="text-xs text-muted-foreground">Tipo: {input.kind} · ID: {input.id}</div>
-                  <button type="button" className="self-start rounded-sm border border-border bg-secondary px-3 py-2 text-xs font-medium" onClick={() => { const copy = mkInput(input.kind, `${input.name} (cópia)`, input.hue); if (input.kind === "camera" || input.kind === "screen" || input.kind === "file") { window.alert("Para duplicar esta fonte de mídia, adicione-a novamente pelo painel de entradas."); return; } addInput(copy); setSettingsInputId(copy.id); }}>Duplicar entrada</button>
-                  <button type="button" disabled={input.id === pgm || input.id === pvw} className="self-start rounded-sm border border-border px-3 py-2 text-xs font-medium text-pgm disabled:opacity-40" onClick={() => { removeInput(input.id); setSettingsInputId(null); }}>Remover entrada</button>
+                  <button type="button" className="self-start rounded-md border border-border bg-secondary px-3 py-2 text-xs font-medium" onClick={() => { const copy = mkInput(input.kind, `${input.name} (cópia)`, input.hue); if (input.kind === "camera" || input.kind === "screen" || input.kind === "file") { window.alert("Para duplicar esta fonte de mídia, adicione-a novamente pelo painel de entradas."); return; } addInput(copy); setSettingsInputId(copy.id); }}>Duplicar entrada</button>
+                  <button type="button" disabled={input.id === pgm || input.id === pvw} className="self-start rounded-md border border-border px-3 py-2 text-xs font-medium text-pgm disabled:opacity-40" onClick={() => { removeInput(input.id); setSettingsInputId(null); }}>Remover entrada</button>
                   {(input.id === pgm || input.id === pvw) && <div className="text-xs text-muted-foreground">Para remover, retire a entrada de Preview e Program primeiro.</div>}
                 </div>}
                 {settingsTab === "audio" && <div className="flex flex-col gap-3">
@@ -594,7 +594,7 @@ export function Studio() {
           );
         })()}
         <DockPanel id="dsk" title="DSK · OVERLAYS" order={dockOrder.indexOf("dsk")} size={dockSizes.dsk} onResize={resizeDock} dragging={draggingPanel === "dsk"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<div className="flex min-h-0 flex-col gap-1.5 overflow-auto rounded-sm border border-border bg-panel p-2">
+<div className="flex min-h-0 flex-col gap-1.5 overflow-auto rounded-md border border-border bg-panel p-2">
             <div className="font-sans text-[10px] tracking-widest text-muted-foreground">DSK · OVERLAYS</div>
             <DskRow n={1} label="Lower Third" on={dsk.lowerThird.on} onToggle={() => setDsk((d) => ({ ...d, lowerThird: { ...d.lowerThird, ...lt, on: !d.lowerThird.on } }))}>
               <input className="field" value={lt.name} onChange={(e) => setLt({ ...lt, name: e.target.value })} placeholder="Nome" />
@@ -619,7 +619,7 @@ export function Studio() {
           </div>
         </DockPanel>
         <DockPanel id="mixer" title="MIXER DE ÁUDIO" order={dockOrder.indexOf("mixer")} size={dockSizes.mixer} onResize={resizeDock} dragging={draggingPanel === "mixer"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<section className="flex h-full min-h-[250px] min-w-0 gap-2 overflow-x-auto rounded-sm border border-border bg-panel p-2">
+<section className="flex h-full min-h-[250px] min-w-0 gap-2 overflow-x-auto rounded-md border border-border bg-panel p-2">
           <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
             {inputs.map((inp) => channels[inp.id] && (
               <Strip key={inp.id} name={inp.name} ch={channels[inp.id]!} level={levels[inp.id]} onAir={tallyOf(inp.id) === "pgm"}
@@ -653,10 +653,10 @@ export function Studio() {
         <Dot ok /> REF 29.97 Hz
         <Dot ok={tele.dropped === 0} /> SINC VÍDEO {tele.dropped === 0 ? "OK" : `${tele.dropped} DROP`}
         <span>ÁUDIO 48 kHz · 24-bit · 2.0</span>
-        <span className="flex items-center gap-1">MASTER           <span className="relative h-2 w-28 overflow-hidden rounded-sm bg-meter-bg"><span className="absolute inset-y-0 left-0 bg-meter-h" style={{ width: `${Math.min(100, ((20 * Math.log10(Math.max(levels['master']?.rms ?? 0, 1e-6)) + 60) / 66) * 100)}%` }} /></span>
+        <span className="flex items-center gap-1">MASTER           <span className="relative h-2 w-28 overflow-hidden rounded-md bg-meter-bg"><span className="absolute inset-y-0 left-0 bg-meter-h" style={{ width: `${Math.min(100, ((20 * Math.log10(Math.max(levels['master']?.rms ?? 0, 1e-6)) + 60) / 66) * 100)}%` }} /></span>
         </span>
-        {anySolo && <span className="rounded-sm bg-warn px-1 font-bold text-warn-foreground">SOLO ATIVO</span>}
-        {ftb && <span className="rounded-sm bg-pgm px-1 font-bold text-pgm-foreground">FTB</span>}
+        {anySolo && <span className="rounded-md bg-warn px-1 font-bold text-warn-foreground">SOLO ATIVO</span>}
+        {ftb && <span className="rounded-md bg-pgm px-1 font-bold text-pgm-foreground">FTB</span>}
         <span className="ml-auto">TRANS: {trType} {dur}ms</span>
         <span>PGM: {nameOf(pgm)}</span>
         <span>PVW: {nameOf(pvw)}</span>
@@ -745,7 +745,7 @@ function DockPanel({
   };
   return (
     <section
-      className={cn("wmix-dock-panel relative flex min-w-0 flex-col rounded-sm border border-border bg-panel", dragging && "opacity-50")}
+      className={cn("wmix-dock-panel relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-panel shadow-sm", dragging && "opacity-50")}
       style={{ order, height: size.height ?? (id === "preview" || id === "program" ? 270 : undefined), minHeight: 110, "--wmix-columns": size.columns, "--wmix-width": size.width ? `${size.width}px` : `${size.columns / 12 * 100}%` } as CSSProperties}
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
       onDrop={(event) => onDrop(event, id)}
@@ -754,7 +754,7 @@ function DockPanel({
         draggable
         onDragStart={(event) => onDragStart(event, id)}
         onDragEnd={onDragEnd}
-        className="flex h-7 shrink-0 cursor-grab items-center justify-between gap-2 border-b border-border bg-panel-strong px-2 select-none active:cursor-grabbing"
+        className="flex h-8 shrink-0 cursor-grab items-center justify-between gap-2 border-b border-border/70 bg-panel-strong/90 px-3 select-none active:cursor-grabbing"
         title={`Arraste para mover o painel ${title}`}
         aria-label={`Arrastar painel ${title}`}
       >
@@ -773,12 +773,12 @@ function DockPanel({
           }}
           aria-label={`Restaurar tamanho de ${title}`}
           title="Restaurar tamanho original"
-          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
           <RotateCcw aria-hidden="true" className="h-3 w-3" />
         </button>
       </div>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-1">{children}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-1.5">{children}</div>
       <button
         type="button"
         aria-label={`Redimensionar ${title}`}
@@ -803,7 +803,7 @@ function Tele({ label, value, warn }: { label: string; value: string; warn?: boo
 }
 function Timer({ label, since, now }: { label: string; since: number | null; now: number; tone: "pgm" }) {
   return (
-    <div className={cn("flex items-center gap-2 rounded-sm border px-2 py-1 font-mono text-xs", since ? "border-pgm text-foreground" : "border-border text-muted-foreground")}>
+    <div className={cn("flex items-center gap-2 rounded-md border px-2 py-1 font-mono text-xs", since ? "border-pgm text-foreground" : "border-border text-muted-foreground")}>
       <span className={cn("text-[10px] font-bold", since && "text-pgm")}>{label}</span>
       {smpte(since ? now - since : 0)}
     </div>
@@ -811,7 +811,7 @@ function Timer({ label, since, now }: { label: string; since: number | null; now
 }
 function MonitorBox({ title, tone, source, safe, children }: { title: string; tone: "pvw" | "pgm"; source: string; safe: boolean; children: React.ReactNode }) {
   return (
-    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-sm border-2 bg-black", tone === "pgm" ? "border-pgm" : "border-pvw")}>
+    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border-2 bg-black", tone === "pgm" ? "border-pgm" : "border-pvw")}>
       <div className={cn("flex shrink-0 items-center justify-between gap-2 px-2 py-0.5 font-sans text-[10px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
         <span>{title}</span><span className="truncate">{source}</span>
       </div>
@@ -833,18 +833,18 @@ function MonitorBox({ title, tone, source, safe, children }: { title: string; to
 }
 function AddBtn({ icon: Icon, label, onClick }: { icon: typeof Camera; label: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="flex h-6 items-center gap-1 rounded-sm border border-border bg-secondary px-2 text-[10px] font-semibold hover:bg-accent">
+    <button onClick={onClick} className="flex h-6 items-center gap-1 rounded-md border border-border bg-secondary px-2 text-[10px] font-semibold hover:bg-accent">
       <Icon className="h-3 w-3" />{label}
     </button>
   );
 }
 function DskRow({ n, label, on, onToggle, children }: { n: number; label: string; on: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
-    <div className={cn("flex flex-col gap-1 rounded-sm border p-1.5", on ? "border-pgm bg-pgm/10" : "border-border")}>
+    <div className={cn("flex flex-col gap-1 rounded-md border p-1.5", on ? "border-pgm bg-pgm/10" : "border-border")}>
       <div className="flex items-center gap-2">
         <span className="font-mono text-[10px] text-muted-foreground">DSK{n}</span>
         <span className="flex-1 text-xs font-semibold">{label}</span>
-        <button onClick={onToggle} className={cn("h-6 w-14 rounded-sm border text-[10px] font-bold", on ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>{on ? "ON AIR" : "TAKE"}</button>
+        <button onClick={onToggle} className={cn("h-6 w-14 rounded-md border text-[10px] font-bold", on ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>{on ? "ON AIR" : "TAKE"}</button>
       </div>
       {children}
     </div>
@@ -853,9 +853,9 @@ function DskRow({ n, label, on, onToggle, children }: { n: number; label: string
 function ScoreBtn({ v, set }: { v: number; set: (v: number) => void }) {
   return (
     <div className="flex items-center gap-0.5">
-      <button className="h-6 w-5 rounded-sm bg-secondary text-xs" onClick={() => set(Math.max(0, v - 1))}>−</button>
+      <button className="h-6 w-5 rounded-md bg-secondary text-xs" onClick={() => set(Math.max(0, v - 1))}>−</button>
       <span className="w-5 text-center font-sans text-sm font-bold">{v}</span>
-      <button className="h-6 w-5 rounded-sm bg-secondary text-xs" onClick={() => set(v + 1)}>+</button>
+      <button className="h-6 w-5 rounded-md bg-secondary text-xs" onClick={() => set(v + 1)}>+</button>
     </div>
   );
 }
