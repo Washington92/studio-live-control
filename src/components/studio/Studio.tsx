@@ -472,29 +472,51 @@ export function Studio() {
 <MonitorBox title="PREVIEW" tone="pvw" source={nameOf(pvw)} safe={safe}><canvas ref={pvwRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
         </DockPanel>
         <DockPanel id="transitions" title="TRANSIÇÕES" order={dockOrder.indexOf("transitions")} size={dockSizes.transitions} onResize={resizeDock} dragging={draggingPanel === "transitions"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<div className="flex flex-col gap-1.5 rounded-md border border-border bg-panel p-2">
-            <div className="text-center text-xs font-semibold tracking-wide text-foreground">Transições</div>
-            <div className="grid grid-cols-2 gap-1">
-              <button onClick={cut} className="h-9 rounded-md border border-border bg-secondary text-xs font-bold hover:bg-accent">CUT</button>
-              <button onClick={doAuto} className={cn("h-9 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
+<div className="rounded-md border border-border bg-panel p-2">
+            <div className="mb-2 text-center text-xs font-semibold tracking-wide text-foreground">Transições</div>
+            <div className="flex min-w-0 gap-2">
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="grid grid-cols-3 gap-1" role="group" aria-label="Selecionar efeito de transição">
+                  {TRANSITIONS.map((t) => (
+                    <button key={t} type="button" onClick={() => setTrType(t)}
+                      aria-pressed={trType === t} title={t}
+                      className={cn("flex h-10 min-w-0 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors", trType === t ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:border-primary/50 hover:text-foreground")}>
+                      <span aria-hidden="true" className="flex h-4 w-7 items-center justify-center overflow-hidden rounded-sm border border-current/70">
+                        {t === "MIX" && <span className="h-full w-full bg-current/25" />}
+                        {t === "FADE" && <span className="h-full w-full bg-gradient-to-r from-transparent via-current/40 to-current/80" />}
+                        {t === "SLIDE" && <span className="flex h-full w-full"><span className="h-full w-1/2 border-r border-current bg-current/35" /><span className="h-full w-1/2" /></span>}
+                        {t === "WIPE" && <span className="h-full w-1/2 self-start bg-current/60" />}
+                        {t === "STINGER" && <span className="text-[11px] font-bold leading-none">✦</span>}
+                      </span>
+                      <span className="text-[9px] font-semibold">{t}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between gap-1 text-[10px] text-muted-foreground">
+                  <span className="font-semibold">Duração</span>
+                  <div className="flex items-center rounded-md border border-border bg-secondary">
+                    <button type="button" aria-label="Diminuir duração" onClick={() => setDur((value) => Math.max(100, value - 100))} className="px-2 py-1 hover:text-primary">−</button>
+                    <span className="min-w-12 text-center tabular-nums text-foreground">{(dur / 1000).toFixed(1)} s</span>
+                    <button type="button" aria-label="Aumentar duração" onClick={() => setDur((value) => Math.min(10000, value + 100))} className="px-2 py-1 hover:text-primary">+</button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  <button type="button" onClick={doAuto} className={cn("h-8 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
+                  <button type="button" onClick={cut} className="h-8 rounded-md border border-primary bg-primary text-xs font-bold text-primary-foreground hover:opacity-90">CUT</button>
+                </div>
+              </div>
+              <div className="flex w-[65px] shrink-0 flex-col items-center justify-center gap-1 border-l border-border pl-2">
+                <span className="text-[9px] font-semibold text-muted-foreground">T-BAR</span>
+                <div className="flex h-[132px] items-center justify-center gap-1">
+                  <input type="range" min={0} max={1} step={0.001} value={progress} onChange={(e) => onTbar(Number(e.target.value))} className="tbar" aria-label="T-Bar" />
+                </div>
+                <span className="text-[10px] font-semibold tabular-nums text-foreground">{Math.round(progress * 100)}%</span>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-1">
-              {TRANSITIONS.map((t) => (
-                <button key={t} onClick={() => setTrType(t)} className={cn("h-6 rounded-md border text-[10px] font-bold", trType === t ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>{t}</button>
-              ))}
+            <div className="mt-2 grid grid-cols-2 gap-1">
+              <button onClick={() => setFtb((f) => !f)} className={cn("h-7 rounded-md border text-[10px] font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</button>
+              <button onClick={() => setSafe((value) => !value)} className={cn("h-7 rounded-md border text-[10px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
             </div>
-            <label className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
-              DURAÇÃO
-              <input type="number" min={100} max={10000} step={100} value={dur} onChange={(e) => setDur(Math.max(100, Number(e.target.value)))} className="w-16 rounded-md border border-border bg-input-bg px-1 text-right text-foreground" />
-              ms
-            </label>
-            <div className="flex h-[130px] items-center justify-center gap-3">
-              <div className="flex h-full flex-col justify-between py-1 font-mono text-[10px] text-muted-foreground"><span>100</span><span>50</span><span>0</span></div>
-              <input type="range" min={0} max={1} step={0.001} value={progress} onChange={(e) => onTbar(Number(e.target.value))} className="tbar" aria-label="T-Bar" />
-              <div className="font-mono text-xs text-foreground">{Math.round(progress * 100)}%</div>
-            </div>
-            <button onClick={() => setFtb((f) => !f)} className={cn("h-8 rounded-md border text-xs font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</button>
-            <button onClick={() => setSafe((s) => !s)} className={cn("h-6 rounded-md border text-[10px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
           </div>
         </DockPanel>
         <DockPanel id="program" title="PROGRAM" order={dockOrder.indexOf("program")} size={dockSizes.program} onResize={resizeDock} dragging={draggingPanel === "program"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
