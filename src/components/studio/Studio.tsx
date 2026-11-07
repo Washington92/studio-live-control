@@ -579,7 +579,7 @@ function readDockOrder(): DockId[] {
 function moveDockPanel(current: DockId[], source: DockId, target: DockId): DockId[] {
   if (source === target || !current.includes(source) || !current.includes(target)) return current;
   const next = current.filter((id) => id !== source);
-  next.splice(next.indexOf(target), 0, source);
+  next.splice(current.indexOf(target), 0, source);
   return next;
 }
 function DockPanel({
