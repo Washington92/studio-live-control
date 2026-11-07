@@ -190,3 +190,17 @@
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+/* Responsive dock: one column on phones, proportional spans on larger screens.
+   Saved desktop dimensions never force horizontal overflow on small viewports. */
+.wmix-dock-panel { grid-column: 1 / -1; }
+@media (min-width: 768px) {
+  .wmix-dock-panel { grid-column: span min(6, var(--wmix-columns)) / span min(6, var(--wmix-columns)); }
+}
+@media (min-width: 1024px) {
+  .wmix-dock-panel { grid-column: span var(--wmix-columns) / span var(--wmix-columns); }
+}
+@media (max-width: 767px) {
+  .wmix-dock-panel { height: auto !important; min-height: 0 !important; }
+  .wmix-dock-panel > div:last-of-type { min-height: 160px; }
+}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type DragEvent, type PointerEvent, type ReactNode } from "react";
 import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Video, Grid3x3 } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
@@ -371,14 +371,14 @@ export function Studio() {
   const anySolo = Object.values(channels).some((c) => c.solo);
 
   return (
-    <div className="flex h-screen min-h-[860px] flex-col bg-background font-sans text-foreground select-none">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background font-sans text-foreground select-none">
       {/* TOP TELEMETRY */}
-      <header className="flex h-12 shrink-0 items-center gap-4 border-b border-border bg-panel-strong px-3">
+      <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-panel-strong px-3 py-2 sm:flex-nowrap">
         <div className="flex items-center gap-2">
           <img src="/wmix-logo.svg" alt="wMix" className="h-8 w-auto max-w-[125px] object-contain" />
         </div>
 
-        <div className="flex-1" />
+        <div className="hidden flex-1 sm:block" />
         <Timer label="REC" since={rec} now={now} tone="pgm" />
         <Timer label="LIVE" since={live} now={now} tone="pgm" />
         <button onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-sm border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
@@ -391,7 +391,7 @@ export function Studio() {
 
       {whipSettingsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
-          <section role="dialog" aria-modal="true" aria-label="Configurar transmissão WHIP" className="w-full max-w-md space-y-3 rounded-md border border-border bg-panel p-5 shadow-2xl">
+          <section role="dialog" aria-modal="true" aria-label="Configurar transmissão WHIP" className="max-h-[90dvh] w-full max-w-md space-y-3 overflow-y-auto rounded-md border border-border bg-panel p-5 shadow-2xl">
             <h2 className="text-base font-bold">Transmissão ao vivo · WebRTC/WHIP</h2>
             <p className="text-xs text-muted-foreground">Transmite o Program e o áudio Master para um destino WHIP HTTPS. RTMP/RTMPS (YouTube) ainda não está disponível nesta versão.</p>
             <label className="block space-y-1 text-xs">
@@ -413,8 +413,8 @@ export function Studio() {
         </div>
       )}
 
-      <main className="min-h-0 flex-1 overflow-auto p-2">
-        <div className="grid grid-cols-1 items-start gap-2 lg:grid-cols-12">
+      <main className="min-h-0 min-w-0 flex-1 overflow-auto p-2">
+        <div className="wmix-dock-grid grid grid-cols-1 items-start gap-2 md:grid-cols-6 lg:grid-cols-12">
         <DockPanel id="preview" title="PREVIEW" order={dockOrder.indexOf("preview")} size={dockSizes.preview} onResize={resizeDock} dragging={draggingPanel === "preview"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <MonitorBox title="PREVIEW" tone="pvw" source={nameOf(pvw)} safe={safe}><canvas ref={pvwRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
         </DockPanel>
@@ -514,7 +514,7 @@ export function Studio() {
           </div>
         </DockPanel>
         <DockPanel id="mixer" title="MIXER DE ÁUDIO" order={dockOrder.indexOf("mixer")} size={dockSizes.mixer} onResize={resizeDock} dragging={draggingPanel === "mixer"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<section className="flex h-[270px] shrink-0 gap-2 rounded-sm border border-border bg-panel p-2">
+<section className="flex h-full min-h-[250px] min-w-0 gap-2 overflow-x-auto rounded-sm border border-border bg-panel p-2">
           <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
             {inputs.map((inp) => channels[inp.id] && (
               <Strip key={inp.id} name={inp.name} ch={channels[inp.id]!} level={levels[inp.id]} onAir={tallyOf(inp.id) === "pgm"}
@@ -522,7 +522,7 @@ export function Studio() {
             ))}
           </div>
           <div className="w-px bg-border" />
-          <div className="flex gap-1.5">
+          <div className="flex shrink-0 gap-1.5">
             {(["aux1", "aux2", "master"] as const).map((k) => (
               <Strip key={k} isBus name={k === "master" ? "MASTER" : k.toUpperCase()} ch={buses[k]!} level={levels[k]} onAir={k === "master" && !!live}
                 onChange={(c) => setBuses((s) => ({ ...s, [k]: { ...s[k]!, ...c } }))} />
@@ -639,8 +639,8 @@ function DockPanel({
   };
   return (
     <section
-      className={cn("relative flex min-w-0 flex-col rounded-sm border border-border bg-panel", dragging && "opacity-50")}
-      style={{ order, height: size.height ?? undefined, minHeight: 160, gridColumn: `span ${size.columns} / span ${size.columns}` }}
+      className={cn("wmix-dock-panel relative flex min-w-0 flex-col rounded-sm border border-border bg-panel", dragging && "opacity-50")}
+      style={{ order, height: size.height ?? undefined, minHeight: 160, "--wmix-columns": size.columns } as CSSProperties}
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
       onDrop={(event) => onDrop(event, id)}
     >
@@ -693,7 +693,7 @@ function MonitorBox({ title, tone, source, safe, children }: { title: string; to
       <div className={cn("flex items-center justify-between px-2 py-0.5 font-mono text-[11px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
         <span>{title}</span><span className="truncate">{source}</span>
       </div>
-      <div className="relative mx-auto aspect-video h-[min(38vh,calc((50vw-110px)*0.5625))]">
+      <div className="relative mx-auto aspect-video w-full max-w-full">
         {children}
         {safe && (
           <>
