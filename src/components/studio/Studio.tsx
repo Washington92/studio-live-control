@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Tv, Video, Grid3x3 } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
+import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
 import { cn } from "@/lib/utils";
 import { Meter, Strip, type Channel, type Level } from "./Mixer";
 
@@ -71,6 +72,7 @@ export function Studio() {
   const dskAlpha = useRef<DskAlpha>({ lowerThird: 0, score: 0, pip: 0, logo: 0 });
   const peaks = useRef<Record<string, number>>({});
   const recorder = useRef<MediaRecorder | null>(null);
+  const output = useRef<ProgramOutputEngine | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const S = useRef({ inputs, pgm, pvw, trType, dur, ftb, dsk, channels, buses });
@@ -122,6 +124,16 @@ export function Studio() {
         drawOverlays(ctx, st.dsk, dskAlpha.current, pipSrc, cv.width, cv.height);
         if (isPgm && ftbAlpha.current > 0.005) { ctx.fillStyle = `rgba(0,0,0,${ftbAlpha.current})`; ctx.fillRect(0, 0, cv.width, cv.height); }
       }
+      // Route the real Program audio to the recording bus; keep visual meters unchanged.
+      output.current?.update({
+        inputs: st.inputs,
+        channels: st.channels,
+        master: st.buses.master,
+        programId: st.pgm,
+        previewId: st.pvw,
+        transition: prog.current,
+        fadeToBlack: ftbAlpha.current,
+      });
       // audio
       if (++audioTick % 3 === 0) {
         const t = t0 / 1000, anySolo = Object.values(st.channels).some((c) => c.solo);
@@ -210,16 +222,54 @@ export function Studio() {
   };
 
   const toggleRec = () => {
-    if (recorder.current) { recorder.current.stop(); recorder.current = null; setRec(null); return; }
+    if (recorder.current) {
+      if (recorder.current.state !== "inactive") recorder.current.stop();
+      recorder.current = null;
+      setRec(null);
+      return;
+    }
     const cv = pgmRef.current; if (!cv) return;
-    const mr = new MediaRecorder(cv.captureStream(30), { mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm" });
-    const chunks: Blob[] = [];
-    mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-    mr.onstop = () => {
-      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
-      a.download = `PGM_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`; a.click();
-    };
-    mr.start(1000); recorder.current = mr; setRec(Date.now());
+    const engine = new ProgramOutputEngine(cv);
+    try {
+      if (typeof MediaRecorder === "undefined") throw new Error("Gravação não suportada neste navegador");
+      const mimeType = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"]
+        .find((type) => MediaRecorder.isTypeSupported(type));
+      if (!mimeType) throw new Error("Codificador WebM não disponível");
+      const stream = engine.start();
+      engine.update({
+        inputs: S.current.inputs,
+        channels: S.current.channels,
+        master: S.current.buses.master,
+        programId: S.current.pgm,
+        previewId: S.current.pvw,
+        transition: prog.current,
+        fadeToBlack: ftbAlpha.current,
+      });
+      const mr = new MediaRecorder(stream, { mimeType });
+      const chunks: Blob[] = [];
+      mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      mr.onstop = () => {
+        engine.stop();
+        if (output.current === engine) output.current = null;
+        if (recorder.current === mr) recorder.current = null;
+        setRec(null);
+        if (!chunks.length) return;
+        const url = URL.createObjectURL(new Blob(chunks, { type: mimeType }));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `PGM_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
+        a.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      };
+      mr.onerror = () => { window.alert("Erro durante a gravação do Program"); };
+      mr.start(1000);
+      output.current = engine;
+      recorder.current = mr;
+      setRec(Date.now());
+    } catch (error) {
+      engine.stop();
+      window.alert(error instanceof Error ? error.message : "Falha ao iniciar a gravação");
+    }
   };
 
   const tallyOf = (id: string) => (id === pgm || (progress > 0 && id === pvw) ? "pgm" : id === pvw ? "pvw" : null);
