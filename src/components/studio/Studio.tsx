@@ -349,13 +349,7 @@ export function Studio() {
         <div className="flex items-center gap-2">
           <img src="/wmix-logo.svg" alt="wMix" className="h-8 w-auto max-w-[125px] object-contain" />
         </div>
-        <div className="mx-2 h-6 w-px bg-border" />
-        <Tele label="FPS" value={tele.fps.toFixed(1)} warn={tele.fps < 50} />
-        <Tele label="RENDER" value={`${tele.render.toFixed(2)} ms`} warn={tele.render > 16} />
-        <Tele label="CARGA" value={`${tele.load.toFixed(0)}%`} warn={tele.load > 70} />
-        <Tele label="MEM" value={tele.mem ? `${tele.mem.toFixed(0)} MB` : "n/d"} />
-        <Tele label="DROP" value={String(tele.dropped)} warn={tele.dropped > 0} />
-        <Tele label="FORMATO" value="1080p30" />
+
         <div className="flex-1" />
         <Timer label="REC" since={rec} now={now} tone="pgm" />
         <Timer label="LIVE" since={live} now={now} tone="pgm" />
@@ -504,7 +498,16 @@ export function Studio() {
       </main>
 
       {/* STATUS BAR */}
-      <footer className="flex h-7 shrink-0 items-center gap-4 border-t border-border bg-panel-strong px-3 font-mono text-[10px] text-muted-foreground">
+      <footer className="flex h-auto min-h-10 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-panel-strong px-3 py-1 font-mono text-[10px] text-muted-foreground">
+        <div className="flex shrink-0 items-center gap-3">
+        <Tele label="FPS" value={tele.fps.toFixed(1)} warn={tele.fps < 50} />
+        <Tele label="RENDER" value={`${tele.render.toFixed(2)} ms`} warn={tele.render > 16} />
+        <Tele label="CARGA" value={`${tele.load.toFixed(0)}%`} warn={tele.load > 70} />
+        <Tele label="MEM" value={tele.mem ? `${tele.mem.toFixed(0)} MB` : "n/d"} />
+        <Tele label="DROP" value={String(tele.dropped)} warn={tele.dropped > 0} />
+        <Tele label="FORMATO" value="1080p30" />
+        </div>
+        <div className="h-6 w-px shrink-0 bg-border" />
         <Dot ok /> GENLOCK: INTERNO · LOCKED
         <Dot ok /> REF 29.97 Hz
         <Dot ok={tele.dropped === 0} /> SINC VÍDEO {tele.dropped === 0 ? "OK" : `${tele.dropped} DROP`}
