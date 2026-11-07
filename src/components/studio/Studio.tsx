@@ -449,7 +449,7 @@ export function Studio() {
         </DockPanel>
         <DockPanel id="transitions" title="TRANSIÇÕES" order={dockOrder.indexOf("transitions")} size={dockSizes.transitions} onResize={resizeDock} dragging={draggingPanel === "transitions"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex flex-col gap-1.5 rounded-md border border-border bg-panel p-2">
-            <div className="text-xs font-semibold tracking-wide text-foreground">Transições</div>
+            <div className="text-center text-xs font-semibold tracking-wide text-foreground">Transições</div>
             <div className="grid grid-cols-2 gap-1">
               <button onClick={cut} className="h-9 rounded-md border border-border bg-secondary text-xs font-bold hover:bg-accent">CUT</button>
               <button onClick={doAuto} className={cn("h-9 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
