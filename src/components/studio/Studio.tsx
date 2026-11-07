@@ -528,7 +528,7 @@ export function Studio() {
                     <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
                       <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
                         onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
-                        className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTED" : "MUTE"}</button>
+                        className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</button>
                       <button type="button" title="Configurações da entrada: renomear" aria-label={`Configurações de ${inp.name}`}
                         onClick={() => renameInput(inp.id)}
                         className="ml-auto rounded-sm border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
