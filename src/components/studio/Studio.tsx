@@ -619,14 +619,16 @@ export function Studio() {
           </div>
         </DockPanel>
         <DockPanel id="mixer" title="MIXER DE ÁUDIO" order={dockOrder.indexOf("mixer")} size={dockSizes.mixer} onResize={resizeDock} dragging={draggingPanel === "mixer"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<section className="flex h-full min-h-[250px] min-w-0 flex-col gap-2 overflow-hidden rounded-md border border-border bg-panel p-2">\n          <div className="shrink-0 text-xs font-semibold tracking-wide text-foreground">Mixer de áudio</div>\n          <div className="flex min-h-0 min-w-0 flex-1 gap-2 overflow-x-auto">
-          <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
+<section className="flex h-full min-h-[250px] min-w-0 flex-col gap-2 overflow-hidden rounded-lg bg-panel p-2.5">
+          <div className="shrink-0 text-xs font-semibold tracking-wide text-foreground">Mixer de áudio</div>
+          <div className="flex min-h-0 min-w-0 flex-1 gap-2 overflow-x-auto">
+          <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
             {inputs.map((inp) => channels[inp.id] && (
               <Strip key={inp.id} name={inp.name} ch={channels[inp.id]!} level={levels[inp.id]} onAir={tallyOf(inp.id) === "pgm"}
                 onChange={(c) => setChannels((s) => ({ ...s, [inp.id]: { ...s[inp.id]!, ...c } }))} />
             ))}
           </div>
-          <div className="w-px bg-border" />
+          <div className="w-px shrink-0 bg-border/70" />
           <div className="flex shrink-0 gap-1.5">
             {(["aux1", "aux2", "master"] as const).map((k) => (
               <Strip key={k} isBus name={k === "master" ? "MASTER" : k.toUpperCase()} ch={buses[k]!} level={levels[k]} onAir={k === "master" && !!live}
