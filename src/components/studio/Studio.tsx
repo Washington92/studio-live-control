@@ -555,7 +555,7 @@ export function Studio() {
         <DockPanel id="inputs" title="ENTRADAS" order={dockOrder.indexOf("inputs")} size={dockSizes.inputs} onResize={resizeDock} dragging={draggingPanel === "inputs"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex min-h-0 flex-col rounded-md border border-border bg-panel font-sans text-xs">
             <div className="flex flex-wrap items-center gap-1 px-2 pt-2 pb-1">
-              <span className="mr-2 inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-foreground"><Video className="h-3.5 w-3.5 text-muted-foreground" />Entradas · {inputs.length}</span>
+              
               {monitorError && <span role="alert" className="max-w-48 truncate text-[10px] text-pgm" title={monitorError}>{monitorError}</span>}
               <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-md border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></button>
               <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-md border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></button>
