@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type DragEvent, type PointerEvent, type ReactNode } from "react";
-import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3, Grip, Volume2, VolumeX } from "lucide-react";
+import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3, Grip, Volume2, VolumeX, Headphones } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
@@ -42,6 +42,8 @@ export function Studio() {
   const [draggingPanel, setDraggingPanel] = useState<DockId | null>(null);
   const [inputsActionsOpen, setInputsActionsOpen] = useState(true);
   const [selectedInputId, setSelectedInputId] = useState<string | null>(INITIAL[0]!.id);
+  const [monitorInputId, setMonitorInputId] = useState<string | null>(null);
+  const [monitorError, setMonitorError] = useState("");
   const [settingsInputId, setSettingsInputId] = useState<string | null>(null);
   const [settingsTab, setSettingsTab] = useState<"geral" | "audio" | "video" | "avancado">("geral");
   const [pgm, setPgm] = useState(INITIAL[0]!.id);
@@ -280,6 +282,28 @@ export function Studio() {
     if (!name || name === input.name) return;
     setInputs((current) => current.map((item) => item.id === id ? { ...item, name } : item));
   };
+  // Independent headphone cue: never changes PGM audio routing.
+  useEffect(() => {
+    if (!monitorInputId) return;
+    const input = inputs.find((item) => item.id === monitorInputId);
+    if (!input?.stream?.getAudioTracks().some((track) => track.readyState === "live")) {
+      setMonitorInputId(null);
+      return;
+    }
+    const player = document.createElement("audio");
+    player.srcObject = input.stream;
+    player.autoplay = true;
+    player.volume = 1;
+    void player.play().catch(() => {
+      setMonitorError("Não foi possível iniciar a escuta. Verifique a saída de áudio e tente novamente.");
+      setMonitorInputId(null);
+    });
+    return () => {
+      player.pause();
+      player.srcObject = null;
+    };
+  }, [monitorInputId, inputs]);
+
   const updateInputAudio = (id: string, patch: Partial<Channel>) => {
     setChannels((current) => ({
       ...current,
@@ -480,6 +504,7 @@ export function Studio() {
 <div className="flex min-h-0 flex-col rounded-md border border-border bg-panel font-sans text-xs">
             <div className="flex items-center gap-1 border-b border-border px-2 py-1">
               <span className="mr-2 text-xs font-semibold tracking-wide text-foreground">Entradas · {inputs.length}</span>
+              {monitorError && <span role="alert" className="max-w-48 truncate text-[10px] text-pgm" title={monitorError}>{monitorError}</span>}
               <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-md border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></button>
               <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-md border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></button>
               <button type="button" aria-label="Configurações da fonte selecionada" title="Renomear fonte selecionada" disabled={!selectedInputId} onClick={configureSelectedInput} className="rounded-md border border-border bg-secondary p-1 hover:text-primary disabled:opacity-40"><Settings className="h-4 w-4" /></button>
@@ -496,7 +521,7 @@ export function Studio() {
               )}
 
             </div>
-            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2 overflow-auto p-2">
+            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-auto p-2">
               {inputs.map((inp, i) => {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
@@ -527,6 +552,14 @@ export function Studio() {
                     <div className="flex items-center gap-1 px-1.5 py-1">
                       <Icon className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="flex-1 truncate text-xs font-medium">{inp.name}</span>
+                      <button type="button"
+                        disabled={!inp.stream?.getAudioTracks().some((track) => track.readyState === "live")}
+                        aria-pressed={monitorInputId === inp.id}
+                        aria-label={`${monitorInputId === inp.id ? "Parar escuta de" : "Ouvir no fone"} ${inp.name}`}
+                        title={inp.stream?.getAudioTracks().some((track) => track.readyState === "live") ? "Escutar fonte no fone (sem alterar Program)" : "Esta fonte não possui faixa de áudio monitorável"}
+                        onClick={() => { setMonitorError(""); setMonitorInputId((id) => id === inp.id ? null : inp.id); }}
+                        className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-30", monitorInputId === inp.id ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground hover:text-foreground")}
+                      ><Headphones className="h-3.5 w-3.5" /></button>
                       <button onClick={() => setPgm(inp.id)} className="rounded-md bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
                       <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
                     </div>
