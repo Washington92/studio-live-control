@@ -19,7 +19,7 @@ export function Meter({ level, className }: { level?: Level | undefined; classNa
 function Btn({ on, onClick, children, tone }: { on: boolean; onClick: () => void; children: React.ReactNode; tone: "mute" | "solo" | "afv" | "bus" }) {
   const toneCls = { mute: "bg-pgm text-pgm-foreground", solo: "bg-warn text-warn-foreground", afv: "bg-pvw text-pvw-foreground", bus: "bg-primary text-primary-foreground" }[tone];
   return (
-    <button onClick={onClick} className={cn("h-5 w-full rounded-sm border border-border font-mono text-[9px] font-bold tracking-wider", on ? toneCls : "bg-secondary text-muted-foreground hover:text-foreground")}>
+    <button onClick={onClick} className={cn("h-5 w-full rounded-sm border border-border font-sans text-[10px] font-bold tracking-wider", on ? toneCls : "bg-secondary text-muted-foreground hover:text-foreground")}>
       {children}
     </button>
   );
@@ -32,7 +32,7 @@ export function Strip({ name, ch, level, onAir, onChange, isBus }: {
   const db = faderToDb(ch.fader);
   return (
     <div className={cn("flex w-[78px] shrink-0 flex-col gap-1 rounded-sm border bg-panel p-1.5", onAir ? "border-pgm" : "border-border", isBus && "bg-panel-strong")}>
-      <div className={cn("truncate rounded-sm px-1 text-center font-mono text-[10px] font-semibold", onAir ? "bg-pgm text-pgm-foreground" : "bg-secondary text-foreground")} title={name}>{name}</div>
+      <div className={cn("truncate rounded-sm px-1 text-center font-sans text-[10px] font-semibold", onAir ? "bg-pgm text-pgm-foreground" : "bg-secondary text-foreground")} title={name}>{name}</div>
       <div className="flex flex-1 gap-1.5 py-1" style={{ minHeight: 120 }}>
         <div className="flex gap-[2px]"><Meter level={level} /><Meter level={level && { rms: level.rms * 0.96, peak: level.peak * 0.97 }} /></div>
         <div className="relative flex flex-1 justify-center">
