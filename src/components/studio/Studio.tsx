@@ -449,14 +449,14 @@ export function Studio() {
         </DockPanel>
         <DockPanel id="transitions" title="TRANSIÇÕES" order={dockOrder.indexOf("transitions")} size={dockSizes.transitions} onResize={resizeDock} dragging={draggingPanel === "transitions"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex flex-col gap-1.5 rounded-sm border border-border bg-panel p-2">
-            <div className="text-center font-mono text-[10px] tracking-widest text-muted-foreground">TRANSIÇÃO</div>
+            <div className="text-center font-sans text-[10px] tracking-widest text-muted-foreground">TRANSIÇÃO</div>
             <div className="grid grid-cols-2 gap-1">
               <button onClick={cut} className="h-9 rounded-sm border border-border bg-secondary text-xs font-bold hover:bg-accent">CUT</button>
               <button onClick={doAuto} className={cn("h-9 rounded-sm border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
             </div>
             <div className="grid grid-cols-3 gap-1">
               {TRANSITIONS.map((t) => (
-                <button key={t} onClick={() => setTrType(t)} className={cn("h-6 rounded-sm border text-[9px] font-bold", trType === t ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>{t}</button>
+                <button key={t} onClick={() => setTrType(t)} className={cn("h-6 rounded-sm border text-[10px] font-bold", trType === t ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>{t}</button>
               ))}
             </div>
             <label className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
@@ -465,12 +465,12 @@ export function Studio() {
               ms
             </label>
             <div className="flex h-[130px] items-center justify-center gap-3">
-              <div className="flex h-full flex-col justify-between py-1 font-mono text-[9px] text-muted-foreground"><span>100</span><span>50</span><span>0</span></div>
+              <div className="flex h-full flex-col justify-between py-1 font-mono text-[10px] text-muted-foreground"><span>100</span><span>50</span><span>0</span></div>
               <input type="range" min={0} max={1} step={0.001} value={progress} onChange={(e) => onTbar(Number(e.target.value))} className="tbar" aria-label="T-Bar" />
               <div className="font-mono text-xs text-foreground">{Math.round(progress * 100)}%</div>
             </div>
             <button onClick={() => setFtb((f) => !f)} className={cn("h-8 rounded-sm border text-xs font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</button>
-            <button onClick={() => setSafe((s) => !s)} className={cn("h-6 rounded-sm border text-[9px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
+            <button onClick={() => setSafe((s) => !s)} className={cn("h-6 rounded-sm border text-[10px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
           </div>
         </DockPanel>
         <DockPanel id="program" title="PROGRAM" order={dockOrder.indexOf("program")} size={dockSizes.program} onResize={resizeDock} dragging={draggingPanel === "program"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
@@ -595,7 +595,7 @@ export function Studio() {
         })()}
         <DockPanel id="dsk" title="DSK · OVERLAYS" order={dockOrder.indexOf("dsk")} size={dockSizes.dsk} onResize={resizeDock} dragging={draggingPanel === "dsk"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex min-h-0 flex-col gap-1.5 overflow-auto rounded-sm border border-border bg-panel p-2">
-            <div className="font-mono text-[10px] tracking-widest text-muted-foreground">DSK · OVERLAYS</div>
+            <div className="font-sans text-[10px] tracking-widest text-muted-foreground">DSK · OVERLAYS</div>
             <DskRow n={1} label="Lower Third" on={dsk.lowerThird.on} onToggle={() => setDsk((d) => ({ ...d, lowerThird: { ...d.lowerThird, ...lt, on: !d.lowerThird.on } }))}>
               <input className="field" value={lt.name} onChange={(e) => setLt({ ...lt, name: e.target.value })} placeholder="Nome" />
               <input className="field" value={lt.title} onChange={(e) => setLt({ ...lt, title: e.target.value })} placeholder="Cargo" />
@@ -754,7 +754,7 @@ function DockPanel({
           draggable
           onDragStart={(event) => onDragStart(event, id)}
           onDragEnd={onDragEnd}
-          className="flex flex-1 cursor-grab items-center gap-2 font-mono text-[10px] font-bold tracking-wider text-muted-foreground active:cursor-grabbing"
+          className="flex flex-1 cursor-grab items-center gap-2 font-sans text-[10px] font-bold tracking-wider text-muted-foreground active:cursor-grabbing"
           title="Arraste para encaixar este painel"
           aria-label={`Arrastar painel ${title}`}
         >
@@ -779,15 +779,15 @@ function DockPanel({
 function Tele({ label, value, warn }: { label: string; value: string; warn?: boolean }) {
   return (
     <div className="flex flex-col leading-none">
-      <span className="font-mono text-[9px] tracking-widest text-muted-foreground">{label}</span>
-      <span className={cn("font-mono text-xs font-semibold", warn ? "text-warn" : "text-foreground")}>{value}</span>
+      <span className="font-sans text-[10px] tracking-widest text-muted-foreground">{label}</span>
+      <span className={cn("font-sans text-xs font-semibold", warn ? "text-warn" : "text-foreground")}>{value}</span>
     </div>
   );
 }
 function Timer({ label, since, now }: { label: string; since: number | null; now: number; tone: "pgm" }) {
   return (
     <div className={cn("flex items-center gap-2 rounded-sm border px-2 py-1 font-mono text-xs", since ? "border-pgm text-foreground" : "border-border text-muted-foreground")}>
-      <span className={cn("text-[9px] font-bold", since && "text-pgm")}>{label}</span>
+      <span className={cn("text-[10px] font-bold", since && "text-pgm")}>{label}</span>
       {smpte(since ? now - since : 0)}
     </div>
   );
@@ -795,7 +795,7 @@ function Timer({ label, since, now }: { label: string; since: number | null; now
 function MonitorBox({ title, tone, source, safe, children }: { title: string; tone: "pvw" | "pgm"; source: string; safe: boolean; children: React.ReactNode }) {
   return (
     <div className={cn("flex flex-col overflow-hidden rounded-sm border-2 bg-black", tone === "pgm" ? "border-pgm" : "border-pvw")}>
-      <div className={cn("flex items-center justify-between px-2 py-0.5 font-mono text-[11px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
+      <div className={cn("flex items-center justify-between px-2 py-0.5 font-sans text-[10px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
         <span>{title}</span><span className="truncate">{source}</span>
       </div>
       <div className="relative mx-auto aspect-video w-full max-w-full">
@@ -835,7 +835,7 @@ function ScoreBtn({ v, set }: { v: number; set: (v: number) => void }) {
   return (
     <div className="flex items-center gap-0.5">
       <button className="h-6 w-5 rounded-sm bg-secondary text-xs" onClick={() => set(Math.max(0, v - 1))}>−</button>
-      <span className="w-5 text-center font-mono text-sm font-bold">{v}</span>
+      <span className="w-5 text-center font-sans text-sm font-bold">{v}</span>
       <button className="h-6 w-5 rounded-sm bg-secondary text-xs" onClick={() => set(v + 1)}>+</button>
     </div>
   );
