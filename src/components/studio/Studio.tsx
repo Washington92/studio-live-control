@@ -42,6 +42,8 @@ export function Studio() {
   const [draggingPanel, setDraggingPanel] = useState<DockId | null>(null);
   const [inputsActionsOpen, setInputsActionsOpen] = useState(true);
   const [selectedInputId, setSelectedInputId] = useState<string | null>(INITIAL[0]!.id);
+  const [settingsInputId, setSettingsInputId] = useState<string | null>(null);
+  const [settingsTab, setSettingsTab] = useState<"geral" | "audio" | "video" | "avancado">("geral");
   const [pgm, setPgm] = useState(INITIAL[0]!.id);
   const [pvw, setPvw] = useState(INITIAL[1]!.id);
   const [trType, setTrType] = useState<TransitionType>("MIX");
@@ -267,6 +269,7 @@ export function Studio() {
     inp?.stream?.getTracks().forEach((t) => t.stop());
     setInputs((l) => l.filter((i) => i.id !== id));
     setSelectedInputId((current) => current === id ? null : current);
+    setSettingsInputId((current) => current === id ? null : current);
     srcCanvases.current.delete(id);
   };
 
@@ -529,8 +532,8 @@ export function Studio() {
                       <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
                         onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
                         className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</button>
-                      <button type="button" title="Configurações da entrada: renomear" aria-label={`Configurações de ${inp.name}`}
-                        onClick={() => renameInput(inp.id)}
+                      <button type="button" title="Configurações da entrada" aria-label={`Configurações de ${inp.name}`}
+                        onClick={() => { setSettingsInputId(inp.id); setSettingsTab("geral"); }}
                         className="ml-auto rounded-sm border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
                     </div>
                   </div>
@@ -539,6 +542,57 @@ export function Studio() {
             </div>
           </div>
         </DockPanel>
+        {settingsInputId && (() => {
+          const input = inputs.find((item) => item.id === settingsInputId);
+          if (!input) return null;
+          const ch = channels[input.id] ?? defCh(input.kind);
+          const hasAudio = input.kind === "camera" || input.kind === "screen" || input.kind === "file";
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsInputId(null); }}>
+              <section role="dialog" aria-modal="true" aria-label={`Configurações de ${input.name}`} className="flex w-full max-w-lg flex-col gap-3 rounded-md border border-border bg-panel p-4 shadow-2xl">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0"><div className="font-mono text-xs font-bold">CONFIGURAÇÕES DA ENTRADA</div><div className="truncate text-sm text-muted-foreground">{input.name}</div></div>
+                  <button type="button" onClick={() => setSettingsInputId(null)} className="rounded-sm border border-border px-2 py-1 text-xs">FECHAR</button>
+                </div>
+                <div className="flex flex-wrap gap-1 border-b border-border pb-2">
+                  {(["geral", "audio", "video", "avancado"] as const).map((tab) => (
+                    <button type="button" key={tab} onClick={() => setSettingsTab(tab)} className={cn("rounded-sm border px-3 py-1.5 font-mono text-[11px] uppercase", settingsTab === tab ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary")}>{tab === "audio" ? "Áudio" : tab === "avancado" ? "Avançado" : tab === "video" ? "Vídeo" : "Geral"}</button>
+                  ))}
+                </div>
+                {settingsTab === "geral" && <div className="flex flex-col gap-3">
+                  <label className="flex flex-col gap-1 text-xs">Nome da entrada
+                    <input className="rounded-sm border border-border bg-background p-2 text-sm" value={input.name} maxLength={80} onChange={(event) => setInputs((current) => current.map((item) => item.id === input.id ? { ...item, name: event.target.value } : item))} />
+                  </label>
+                  <div className="text-xs text-muted-foreground">Tipo: {input.kind} · ID: {input.id}</div>
+                  <button type="button" className="self-start rounded-sm border border-border bg-secondary px-3 py-2 text-xs" onClick={() => { const copy = mkInput(input.kind, `${input.name} (cópia)`, input.hue); if (input.kind === "camera" || input.kind === "screen" || input.kind === "file") { window.alert("Para duplicar esta fonte de mídia, adicione-a novamente pelo painel de entradas."); return; } addInput(copy); setSettingsInputId(copy.id); }}>Duplicar entrada</button>
+                  <button type="button" disabled={input.id === pgm || input.id === pvw} className="self-start rounded-sm border border-border px-3 py-2 text-xs text-pgm disabled:opacity-40" onClick={() => { removeInput(input.id); setSettingsInputId(null); }}>Remover entrada</button>
+                  {(input.id === pgm || input.id === pvw) && <div className="text-xs text-muted-foreground">Para remover, retire a entrada de Preview e Program primeiro.</div>}
+                </div>}
+                {settingsTab === "audio" && <div className="flex flex-col gap-3">
+                  <label className="flex flex-col gap-2 text-xs">Volume individual: {ch.fader === 0 ? "-∞" : faderToDb(ch.fader).toFixed(1)} dB
+                    <input type="range" min={0} max={1000} value={Math.round(ch.fader * 1000)} onChange={(event) => updateInputAudio(input.id, { fader: Number(event.target.value) / 1000 })} onDoubleClick={() => updateInputAudio(input.id, { fader: 0.75 })} aria-label="Volume individual" className="w-full accent-primary" />
+                  </label>
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={ch.mute} onChange={(event) => updateInputAudio(input.id, { mute: event.target.checked })} /> Mutar entrada</label>
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={ch.afv} onChange={(event) => updateInputAudio(input.id, { afv: event.target.checked })} /> Áudio acompanha vídeo (AFV)</label>
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={ch.solo} onChange={(event) => updateInputAudio(input.id, { solo: event.target.checked })} /> Solo</label>
+                  <div className="text-xs text-muted-foreground">{hasAudio ? "Os ajustes utilizam o canal desta entrada no mixer." : "Esta fonte não fornece áudio de mídia; os ajustes do canal ficam disponíveis para compatibilidade com o mixer."}</div>
+                </div>}
+                {settingsTab === "video" && <div className="flex flex-col gap-2 text-xs">
+                  <div>Tipo de vídeo: {input.kind}</div>
+                  {input.video ? <><div>Resolução detectada: {input.video.videoWidth || "—"} × {input.video.videoHeight || "—"}</div><label className="flex items-center gap-2"><input type="checkbox" checked={input.video.paused} onChange={(event) => { if (event.target.checked) input.video?.pause(); else void input.video?.play(); setInputs((current) => [...current]); }} /> Pausar reprodução</label></> : <div className="text-muted-foreground">Esta entrada não possui controles de reprodução de vídeo.</div>}
+                  <div className="text-muted-foreground">Correção de cor, chroma key e transformações exigem integração com o motor de renderização; não estão disponíveis nesta versão.</div>
+                </div>}
+                {settingsTab === "avancado" && <div className="flex flex-col gap-2 text-xs">
+                  <div>Identificador: {input.id}</div>
+                  <div>Fonte: {input.kind}</div>
+                  <div>Captura de áudio: {input.stream?.getAudioTracks().length ?? 0} trilha(s)</div>
+                  <div>Captura de vídeo: {input.stream?.getVideoTracks().length ?? 0} trilha(s)</div>
+                  <div className="text-muted-foreground">PTZ, FPS configurável, sincronização e gatilhos serão disponibilizados quando suportados pelo motor.</div>
+                </div>}
+              </section>
+            </div>
+          );
+        })()}
         <DockPanel id="dsk" title="DSK · OVERLAYS" order={dockOrder.indexOf("dsk")} size={dockSizes.dsk} onResize={resizeDock} dragging={draggingPanel === "dsk"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex min-h-0 flex-col gap-1.5 overflow-auto rounded-sm border border-border bg-panel p-2">
             <div className="font-mono text-[10px] tracking-widest text-muted-foreground">DSK · OVERLAYS</div>
