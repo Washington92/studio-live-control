@@ -521,15 +521,15 @@ export function Studio() {
               )}
 
             </div>
-            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2 overflow-auto p-2">
+            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(min(100%,200px),1fr))] gap-2 overflow-auto p-2">
               {inputs.map((inp, i) => {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
                   <div key={inp.id} className={cn("group overflow-hidden rounded-md border-2 bg-panel-strong", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
                     <div className="flex items-stretch bg-black">
-                      <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block aspect-video min-w-0 flex-1 bg-black">
-                        <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="h-full w-full" />
+                      <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block min-w-0 flex-1 aspect-video overflow-hidden bg-black">
+                        <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="absolute inset-0 h-full w-full object-contain" />
                         <span className="absolute left-1 top-1 rounded-md bg-background/80 px-1 text-[10px] font-semibold">{i + 1}</span>
                         {tally && <span className={cn("absolute right-1 top-1 rounded-md px-1 text-[10px] font-semibold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
                         <div className="absolute bottom-1 right-1 flex h-8 gap-px"><Meter level={levels[inp.id]} className="w-1" /></div>
