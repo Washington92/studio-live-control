@@ -8,10 +8,6 @@ int main() {
     std::cerr << "Falha ao iniciar libobs. Verifique runtime e dependencias.\n";
     return 1;
   }
-  const obs_video_info video{
-    .graphics_module = nullptr
-  };
-  (void)video;
   std::cout << "WMix: libobs inicializado com sucesso.\n";
   obs_shutdown();
   return 0;
