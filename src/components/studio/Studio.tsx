@@ -754,13 +754,13 @@ function DockPanel({
         draggable
         onDragStart={(event) => onDragStart(event, id)}
         onDragEnd={onDragEnd}
-        className="flex h-8 shrink-0 cursor-grab items-center justify-between gap-2 border-b border-border/70 bg-panel-strong/90 px-3 select-none active:cursor-grabbing"
+        className="group flex h-9 shrink-0 cursor-grab items-center justify-between gap-2 rounded-t-xl border-b border-white/5 bg-gradient-to-r from-secondary/90 via-panel-strong to-panel-strong px-3 select-none transition-colors hover:from-accent/70 active:cursor-grabbing"
         title={`Arraste para mover o painel ${title}`}
         aria-label={`Arrastar painel ${title}`}
       >
         <div className="flex min-w-0 items-center gap-2">
-          <Grip aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-          <span className="truncate font-sans text-[10px] font-semibold tracking-wider text-foreground/85">{title}</span>
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground/70 transition-colors group-hover:bg-foreground/10 group-hover:text-foreground"><Grip aria-hidden="true" className="h-3.5 w-3.5" /></span>
+          <span className="truncate font-sans text-[11px] font-semibold tracking-wide text-foreground/90">{title}</span>
         </div>
         <button
           type="button"
@@ -773,7 +773,7 @@ function DockPanel({
           }}
           aria-label={`Restaurar tamanho de ${title}`}
           title="Restaurar tamanho original"
-          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-transparent bg-foreground/5 text-muted-foreground transition-colors hover:border-border hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
           <RotateCcw aria-hidden="true" className="h-3 w-3" />
         </button>
