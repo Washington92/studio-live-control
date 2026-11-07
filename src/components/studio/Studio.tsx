@@ -270,6 +270,20 @@ export function Studio() {
     srcCanvases.current.delete(id);
   };
 
+  const renameInput = (id: string) => {
+    const input = inputs.find((item) => item.id === id);
+    if (!input) return;
+    const name = window.prompt("Renomear entrada", input.name)?.trim();
+    if (!name || name === input.name) return;
+    setInputs((current) => current.map((item) => item.id === id ? { ...item, name } : item));
+  };
+  const updateInputAudio = (id: string, patch: Partial<Channel>) => {
+    setChannels((current) => ({
+      ...current,
+      [id]: { ...(current[id] ?? defCh(inputs.find((item) => item.id === id)?.kind ?? "sim")), ...patch },
+    }));
+  };
+
   const configureSelectedInput = () => {
     const selected = inputs.find((input) => input.id === selectedInputId);
     if (!selected) return;
@@ -482,6 +496,7 @@ export function Studio() {
             <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2 overflow-auto p-2">
               {inputs.map((inp, i) => {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
+                const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
                   <div key={inp.id} className={cn("group overflow-hidden rounded-sm border-2 bg-panel-strong", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
                     <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block aspect-video w-full bg-black">
@@ -495,6 +510,17 @@ export function Studio() {
                       <span className="flex-1 truncate text-[11px] font-medium">{inp.name}</span>
                       <button onClick={() => setPgm(inp.id)} className="rounded-sm bg-secondary px-1 font-mono text-[9px] font-bold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
                       <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
+                    </div>
+                    <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
+                      <button type="button" aria-pressed={!audio.afv} title="Áudio próprio: independente da troca de câmeras (AFV desligado)"
+                        onClick={() => updateInputAudio(inp.id, { afv: !audio.afv })}
+                        className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", !audio.afv ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary text-muted-foreground")}>ÁUDIO PRÓPRIO</button>
+                      <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
+                        onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
+                        className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTED" : "MUTE"}</button>
+                      <button type="button" title="Renomear entrada" aria-label={`Renomear ${inp.name}`}
+                        onClick={() => renameInput(inp.id)}
+                        className="ml-auto rounded-sm border border-border bg-secondary px-1.5 py-0.5 font-mono text-[9px] font-bold text-muted-foreground hover:text-primary">RENAME</button>
                     </div>
                   </div>
                 );
