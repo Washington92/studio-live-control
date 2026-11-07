@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type DragEvent, type PointerEvent, type ReactNode } from "react";
-import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3, Grip } from "lucide-react";
+import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3, Grip, Volume2, VolumeX } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
@@ -509,7 +509,7 @@ export function Studio() {
                         {tally && <span className={cn("absolute right-1 top-1 rounded-md px-1 text-[10px] font-semibold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
                         <div className="absolute bottom-1 right-1 flex h-8 gap-px"><Meter level={levels[inp.id]} className="w-1" /></div>
                       </button>
-                      <div className="flex w-7 shrink-0 flex-col items-center justify-center gap-0.5 border-l border-border/50 bg-panel/70 px-0.5 py-1">
+                      <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-1 border-l border-border/40 bg-panel/70 px-0.5 py-1">
                         <input type="range" min={0} max={1000} step={1}
                           value={Math.round(audio.fader * 1000)}
                           onChange={(event) => updateInputAudio(inp.id, { fader: Number(event.target.value) / 1000 })}
@@ -518,6 +518,10 @@ export function Studio() {
                           title={`Volume: ${audio.fader === 0 ? "-∞" : faderToDb(audio.fader).toFixed(0)} dB`}
                           className="input-mini-fader"
                         />
+                        <span className="text-[9px] font-medium tabular-nums text-muted-foreground">{Math.round(audio.fader * 100)}%</span>
+                        <button type="button" aria-label={`${audio.mute ? "Ativar" : "Silenciar"} áudio de ${inp.name}`} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"} onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })} className={cn("flex h-5 w-6 items-center justify-center rounded-md transition-colors", audio.mute ? "text-muted-foreground" : "text-primary hover:bg-primary/10")}>
+                          {audio.mute ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                        </button>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 px-1.5 py-1">
