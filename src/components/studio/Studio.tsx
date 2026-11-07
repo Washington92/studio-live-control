@@ -499,12 +499,26 @@ export function Studio() {
                 const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
                   <div key={inp.id} className={cn("group overflow-hidden rounded-sm border-2 bg-panel-strong", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
-                    <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block aspect-video w-full bg-black">
-                      <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="h-full w-full" />
-                      <span className="absolute left-1 top-1 rounded-sm bg-background/80 px-1 font-mono text-[10px] font-bold">{i + 1}</span>
-                      {tally && <span className={cn("absolute right-1 top-1 rounded-sm px-1 font-mono text-[9px] font-bold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
-                      <div className="absolute bottom-1 right-1 flex h-8 gap-px"><Meter level={levels[inp.id]} className="w-1" /></div>
-                    </button>
+                    <div className="flex items-stretch bg-black">
+                      <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block aspect-video min-w-0 flex-1 bg-black">
+                        <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="h-full w-full" />
+                        <span className="absolute left-1 top-1 rounded-sm bg-background/80 px-1 font-mono text-[10px] font-bold">{i + 1}</span>
+                        {tally && <span className={cn("absolute right-1 top-1 rounded-sm px-1 font-mono text-[9px] font-bold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
+                        <div className="absolute bottom-1 right-1 flex h-8 gap-px"><Meter level={levels[inp.id]} className="w-1" /></div>
+                      </button>
+                      <div className="flex w-8 shrink-0 flex-col items-center gap-1 border-l border-border bg-panel px-1 py-1">
+                        <span className="font-mono text-[8px] text-muted-foreground">VOL</span>
+                        <input type="range" min={0} max={1000} step={1}
+                          value={Math.round(audio.fader * 1000)}
+                          onChange={(event) => updateInputAudio(inp.id, { fader: Number(event.target.value) / 1000 })}
+                          onDoubleClick={() => updateInputAudio(inp.id, { fader: 0.75 })}
+                          aria-label={`Volume de ${inp.name}`}
+                          title={`Volume: ${audio.fader === 0 ? "-∞" : faderToDb(audio.fader).toFixed(0)} dB`}
+                          style={{ writingMode: "vertical-lr", direction: "rtl" }}
+                          className="min-h-0 w-4 flex-1 cursor-pointer accent-primary" />
+                        <span className="font-mono text-[8px] tabular-nums text-muted-foreground">{Math.round(audio.fader * 100)}%</span>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-1 px-1.5 py-1">
                       <Icon className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="flex-1 truncate text-[11px] font-medium">{inp.name}</span>
@@ -512,22 +526,12 @@ export function Studio() {
                       <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
                     </div>
                     <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
-                      <label className="flex min-w-0 flex-1 items-center gap-1.5" title="Volume individual da entrada">
-                        <span className="shrink-0 font-mono text-[9px] text-muted-foreground">VOL</span>
-                        <input type="range" min={0} max={1000} step={1}
-                          value={Math.round(audio.fader * 1000)}
-                          onChange={(event) => updateInputAudio(inp.id, { fader: Number(event.target.value) / 1000 })}
-                          onDoubleClick={() => updateInputAudio(inp.id, { fader: 0.75 })}
-                          aria-label={`Volume de ${inp.name}`}
-                          className="h-2 min-w-0 flex-1 cursor-pointer accent-primary" />
-                        <span className="w-9 shrink-0 text-right font-mono text-[9px] tabular-nums text-muted-foreground">{audio.fader === 0 ? "-∞" : faderToDb(audio.fader).toFixed(0)} dB</span>
-                      </label>
                       <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
                         onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
                         className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-bold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTED" : "MUTE"}</button>
-                      <button type="button" title="Renomear entrada" aria-label={`Renomear ${inp.name}`}
+                      <button type="button" title="Configurações da entrada: renomear" aria-label={`Configurações de ${inp.name}`}
                         onClick={() => renameInput(inp.id)}
-                        className="ml-auto rounded-sm border border-border bg-secondary px-1.5 py-0.5 font-mono text-[9px] font-bold text-muted-foreground hover:text-primary">RENAME</button>
+                        className="ml-auto rounded-sm border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
                     </div>
                   </div>
                 );
