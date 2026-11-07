@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type DragEvent, type PointerEvent, type ReactNode } from "react";
-import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Video, Grid3x3 } from "lucide-react";
+import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3 } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
@@ -40,7 +40,8 @@ export function Studio() {
   const [dockOrder, setDockOrder] = useState<DockId[]>(readDockOrder);
   const [dockSizes, setDockSizes] = useState<DockSizes>(readDockSizes);
   const [draggingPanel, setDraggingPanel] = useState<DockId | null>(null);
-  const [inputsActionsOpen, setInputsActionsOpen] = useState(true);
+  const [inputsActionsOpen, setInputsActionsOpen] = useState(false);
+  const [selectedInputId, setSelectedInputId] = useState<string | null>(INITIAL[0]!.id);
   const [pgm, setPgm] = useState(INITIAL[0]!.id);
   const [pvw, setPvw] = useState(INITIAL[1]!.id);
   const [trType, setTrType] = useState<TransitionType>("MIX");
@@ -242,6 +243,8 @@ export function Studio() {
 
   const addInput = (inp: Input) => {
     setInputs((l) => [...l, inp]);
+    setSelectedInputId(inp.id);
+    setInputsActionsOpen(false);
     setChannels((c) => ({ ...c, [inp.id]: defCh(inp.kind) }));
   };
   const addCamera = async () => {
@@ -263,7 +266,16 @@ export function Studio() {
     const inp = inputs.find((i) => i.id === id);
     inp?.stream?.getTracks().forEach((t) => t.stop());
     setInputs((l) => l.filter((i) => i.id !== id));
+    setSelectedInputId((current) => current === id ? null : current);
     srcCanvases.current.delete(id);
+  };
+
+  const configureSelectedInput = () => {
+    const selected = inputs.find((input) => input.id === selectedInputId);
+    if (!selected) return;
+    const name = window.prompt("Nome da fonte", selected.name)?.trim();
+    if (!name || name === selected.name) return;
+    setInputs((current) => current.map((input) => input.id === selected.id ? { ...input, name } : input));
   };
 
   const stopWhip = async () => {
@@ -449,21 +461,49 @@ export function Studio() {
         </DockPanel>
         <DockPanel id="inputs" title="ENTRADAS" order={dockOrder.indexOf("inputs")} size={dockSizes.inputs} onResize={resizeDock} dragging={draggingPanel === "inputs"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex min-h-0 flex-col rounded-sm border border-border bg-panel">
-            <div className="flex items-center gap-1 border-b border-border px-2 py-1">
-              <span className="mr-2 font-mono text-[10px] tracking-widest text-muted-foreground">ENTRADAS · {inputs.length}</span>
-              <button type="button" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className={cn("rounded-sm border px-2 py-1 font-mono text-[10px] font-bold", inputsActionsOpen ? "border-primary text-primary" : "border-border bg-secondary text-muted-foreground")}>INPUTS</button>
+            <div className="flex items-center justify-between border-b border-border px-2 py-1">
+              <span className="font-mono text-[10px] tracking-widest text-muted-foreground">FONTES · {inputs.length}</span>
+              <span className="font-mono text-[9px] text-muted-foreground">1-9 PVW · ⇧1-9 PGM</span>
+            </div>
+            <div className="max-h-36 min-h-16 overflow-y-auto border-b border-border" role="listbox" aria-label="Fontes de entrada">
+              {inputs.map((inp) => {
+                const Icon = KIND_ICON[inp.kind];
+                return (
+                  <button key={inp.id} type="button" role="option" aria-selected={selectedInputId === inp.id}
+                    onClick={() => setSelectedInputId(inp.id)}
+                    onDoubleClick={() => setPvw(inp.id)}
+                    className={cn("flex w-full items-center gap-2 px-2 py-1 text-left text-xs hover:bg-secondary", selectedInputId === inp.id && "bg-secondary text-primary")}>
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 truncate">{inp.name}</span>
+                    {inp.id === pgm && <span className="font-mono text-[9px] text-pgm">PGM</span>}
+                    {inp.id === pvw && <span className="font-mono text-[9px] text-pvw">PVW</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="relative flex items-center gap-1 border-b border-border px-2 py-1">
+              <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" aria-expanded={inputsActionsOpen}
+                onClick={() => setInputsActionsOpen((open) => !open)}
+                className="rounded-sm border border-border bg-secondary p-1 text-foreground hover:text-primary"><Plus className="h-4 w-4" /></button>
+              <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada"
+                disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw}
+                onClick={() => { if (selectedInputId) removeInput(selectedInputId); }}
+                className="rounded-sm border border-border bg-secondary p-1 hover:text-pgm disabled:cursor-not-allowed disabled:opacity-40"><Minus className="h-4 w-4" /></button>
+              <button type="button" aria-label="Configurações da fonte selecionada" title="Renomear fonte selecionada"
+                disabled={!selectedInputId}
+                onClick={configureSelectedInput}
+                className="rounded-sm border border-border bg-secondary p-1 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"><Settings className="h-4 w-4" /></button>
               {inputsActionsOpen && (
-                <>
-              <AddBtn icon={Camera} label="Webcam" onClick={addCamera} />
-              <AddBtn icon={Monitor} label="Tela" onClick={addScreen} />
-              <AddBtn icon={Film} label="Vídeo" onClick={() => fileRef.current?.click()} />
-              <AddBtn icon={Grid3x3} label="Barras" onClick={() => addInput(mkInput("bars", "Barras SMPTE"))} />
-              <AddBtn icon={Globe} label="Web" onClick={() => addInput(mkInput("web", "Fonte Web"))} />
-              <AddBtn icon={Plus} label="Câm. Sim" onClick={() => addInput(mkInput("sim", `Câmera ${inputs.length + 1}`, Math.floor(Math.random() * 360)))} />
-              <input ref={fileRef} type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ""; }} />
-                </>
+                <div className="absolute bottom-full left-2 z-30 flex min-w-44 flex-col gap-1 rounded-sm border border-border bg-panel-strong p-2 shadow-xl">
+                  <AddBtn icon={Camera} label="Webcam" onClick={() => { setInputsActionsOpen(false); void addCamera(); }} />
+                  <AddBtn icon={Monitor} label="Tela" onClick={() => { setInputsActionsOpen(false); void addScreen(); }} />
+                  <AddBtn icon={Film} label="Vídeo" onClick={() => { setInputsActionsOpen(false); fileRef.current?.click(); }} />
+                  <AddBtn icon={Grid3x3} label="Barras" onClick={() => addInput(mkInput("bars", "Barras SMPTE"))} />
+                  <AddBtn icon={Globe} label="Web" onClick={() => addInput(mkInput("web", "Fonte Web"))} />
+                  <AddBtn icon={Plus} label="Câm. Sim" onClick={() => addInput(mkInput("sim", `Câmera ${inputs.length + 1}`, Math.floor(Math.random() * 360)))} />
+                </div>
               )}
-              <span className="ml-auto font-mono text-[9px] text-muted-foreground">1-9 PVW · ⇧1-9 PGM · ESPAÇO CUT · ENTER AUTO · B FTB</span>
+              <input ref={fileRef} type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ""; }} />
             </div>
             <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2 overflow-auto p-2">
               {inputs.map((inp, i) => {
