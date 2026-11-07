@@ -6,9 +6,9 @@ export interface Input {
   name: string;
   kind: SourceKind;
   hue: number;
-  video?: HTMLVideoElement;
-  stream?: MediaStream;
-  analyser?: AnalyserNode;
+  video?: HTMLVideoElement | undefined;
+  stream?: MediaStream | undefined;
+  analyser?: AnalyserNode | undefined;
 }
 
 export interface Dsk {
@@ -18,6 +18,7 @@ export interface Dsk {
   logo: { on: boolean; text: string };
 }
 
+export type DskAlpha = { lowerThird: number; score: number; pip: number; logo: number };
 export const SW = 640;
 export const SH = 360;
 
@@ -133,7 +134,7 @@ export function composite(
 }
 
 export function drawOverlays(
-  ctx: CanvasRenderingContext2D, dsk: Dsk, alpha: Record<string, number>,
+  ctx: CanvasRenderingContext2D, dsk: Dsk, alpha: DskAlpha,
   pipSrc: CanvasImageSource | null, w: number, h: number,
 ) {
   const s = w / 1280;

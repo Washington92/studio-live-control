@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Tv, Video, Grid3x3 } from "lucide-react";
-import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
+import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { cn } from "@/lib/utils";
 import { Meter, Strip, type Channel, type Level } from "./Mixer";
@@ -35,8 +35,8 @@ const KIND_ICON: Record<SourceKind, typeof Camera> = { sim: Video, camera: Camer
 
 export function Studio() {
   const [inputs, setInputs] = useState<Input[]>(INITIAL);
-  const [pgm, setPgm] = useState(INITIAL[0].id);
-  const [pvw, setPvw] = useState(INITIAL[1].id);
+  const [pgm, setPgm] = useState(INITIAL[0]!.id);
+  const [pvw, setPvw] = useState(INITIAL[1]!.id);
   const [trType, setTrType] = useState<TransitionType>("MIX");
   const [dur, setDur] = useState(1000);
   const [progress, setProgress] = useState(0);
@@ -45,7 +45,7 @@ export function Studio() {
   const [dsk, setDsk] = useState<Dsk>({
     lowerThird: { on: false, name: "Ana Ribeiro", title: "Diretora de Operações" },
     score: { on: false, home: "SAN", away: "COR", homeScore: 1, awayScore: 0 },
-    pip: { on: false, inputId: INITIAL[2].id },
+    pip: { on: false, inputId: INITIAL[2]!.id },
     logo: { on: true, text: "TV" },
   });
   const [channels, setChannels] = useState<Record<string, Channel>>(() => Object.fromEntries(INITIAL.map((i) => [i.id, defCh(i.kind)])));
@@ -68,7 +68,7 @@ export function Studio() {
   const auto = useRef<{ start: number } | null>(null);
   const prog = useRef(0);
   const ftbAlpha = useRef(0);
-  const dskAlpha = useRef<Record<string, number>>({ lowerThird: 0, score: 0, pip: 0, logo: 0 });
+  const dskAlpha = useRef<DskAlpha>({ lowerThird: 0, score: 0, pip: 0, logo: 0 });
   const peaks = useRef<Record<string, number>>({});
   const recorder = useRef<MediaRecorder | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -103,8 +103,8 @@ export function Studio() {
         if (p >= 1) complete(); else { prog.current = p; setProgress(p); }
       }
       ftbAlpha.current += ((st.ftb ? 1 : 0) - ftbAlpha.current) * 0.08;
-      for (const k of Object.keys(dskAlpha.current)) {
-        const on = (st.dsk as unknown as Record<string, { on: boolean }>)[k].on;
+      for (const k of Object.keys(dskAlpha.current) as (keyof DskAlpha)[]) {
+        const on = st.dsk[k].on;
         dskAlpha.current[k] = Math.max(0, Math.min(1, dskAlpha.current[k] + (on ? 0.08 : -0.08)));
       }
       for (const inp of st.inputs) {
@@ -146,7 +146,7 @@ export function Studio() {
           m += rms * rms; if (ch.a1) x1 += rms * rms; if (ch.a2) x2 += rms * rms;
         }
         for (const [k, sum] of [["master", m], ["aux1", x1], ["aux2", x2]] as const) {
-          const bch = st.buses[k];
+          const bch = st.buses[k]!;
           let r = Math.sqrt(sum) * dbToGain(faderToDb(bch.fader)) * (bch.mute ? 0 : 1);
           if (k === "master") r *= 1 - ftbAlpha.current;
           const pk = Math.max(Math.min(1.4, r * 1.41), (peaks.current[k] ?? 0) * 0.94); peaks.current[k] = pk;
@@ -350,15 +350,15 @@ export function Studio() {
         <section className="flex h-[270px] shrink-0 gap-2 rounded-sm border border-border bg-panel p-2">
           <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
             {inputs.map((inp) => channels[inp.id] && (
-              <Strip key={inp.id} name={inp.name} ch={channels[inp.id]} level={levels[inp.id]} onAir={tallyOf(inp.id) === "pgm"}
-                onChange={(c) => setChannels((s) => ({ ...s, [inp.id]: { ...s[inp.id], ...c } }))} />
+              <Strip key={inp.id} name={inp.name} ch={channels[inp.id]!} level={levels[inp.id]} onAir={tallyOf(inp.id) === "pgm"}
+                onChange={(c) => setChannels((s) => ({ ...s, [inp.id]: { ...s[inp.id]!, ...c } }))} />
             ))}
           </div>
           <div className="w-px bg-border" />
           <div className="flex gap-1.5">
             {(["aux1", "aux2", "master"] as const).map((k) => (
-              <Strip key={k} isBus name={k === "master" ? "MASTER" : k.toUpperCase()} ch={buses[k]} level={levels[k]} onAir={k === "master" && !!live}
-                onChange={(c) => setBuses((s) => ({ ...s, [k]: { ...s[k], ...c } }))} />
+              <Strip key={k} isBus name={k === "master" ? "MASTER" : k.toUpperCase()} ch={buses[k]!} level={levels[k]} onAir={k === "master" && !!live}
+                onChange={(c) => setBuses((s) => ({ ...s, [k]: { ...s[k]!, ...c } }))} />
             ))}
           </div>
         </section>
@@ -370,7 +370,7 @@ export function Studio() {
         <Dot ok /> REF 29.97 Hz
         <Dot ok={tele.dropped === 0} /> SINC VÍDEO {tele.dropped === 0 ? "OK" : `${tele.dropped} DROP`}
         <span>ÁUDIO 48 kHz · 24-bit · 2.0</span>
-        <span className="flex items-center gap-1">MASTER           <span className="relative h-2 w-28 overflow-hidden rounded-sm bg-meter-bg"><span className="absolute inset-y-0 left-0 bg-meter-h" style={{ width: `${Math.min(100, ((20 * Math.log10(Math.max(levels.master?.rms ?? 0, 1e-6)) + 60) / 66) * 100)}%` }} /></span>
+        <span className="flex items-center gap-1">MASTER           <span className="relative h-2 w-28 overflow-hidden rounded-sm bg-meter-bg"><span className="absolute inset-y-0 left-0 bg-meter-h" style={{ width: `${Math.min(100, ((20 * Math.log10(Math.max(levels['master']?.rms ?? 0, 1e-6)) + 60) / 66) * 100)}%` }} /></span>
         </span>
         {anySolo && <span className="rounded-sm bg-warn px-1 font-bold text-warn-foreground">SOLO ATIVO</span>}
         {ftb && <span className="rounded-sm bg-pgm px-1 font-bold text-pgm-foreground">FTB</span>}

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export interface Channel { fader: number; mute: boolean; solo: boolean; afv: boolean; a1: boolean; a2: boolean }
 export interface Level { rms: number; peak: number }
 
-export function Meter({ level, className }: { level?: Level; className?: string }) {
+export function Meter({ level, className }: { level?: Level | undefined; className?: string }) {
   const rms = dbToMeter(gainToDb(level?.rms ?? 0));
   const peak = dbToMeter(gainToDb(level?.peak ?? 0));
   return (
@@ -26,7 +26,7 @@ function Btn({ on, onClick, children, tone }: { on: boolean; onClick: () => void
 }
 
 export function Strip({ name, ch, level, onAir, onChange, isBus }: {
-  name: string; ch: Channel; level?: Level; onAir?: boolean; isBus?: boolean;
+  name: string; ch: Channel; level?: Level | undefined; onAir?: boolean; isBus?: boolean;
   onChange: (c: Partial<Channel>) => void;
 }) {
   const db = faderToDb(ch.fader);
