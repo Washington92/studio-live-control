@@ -620,23 +620,51 @@ function DockPanel({
   onDrop: (event: DragEvent<HTMLElement>, id: DockId) => void;
   children: ReactNode;
 }) {
-  const resizeStart = useRef<{ x: number; y: number; width: number; height: number; size: DockSize } | null>(null);
-  const beginResize = (event: PointerEvent<HTMLButtonElement>) => {
+  type ResizeEdge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
+  const resizeStart = useRef<{ pointer: number; edge: ResizeEdge; x: number; y: number; width: number; height: number; size: DockSize } | null>(null);
+  const beginResize = (event: PointerEvent<HTMLButtonElement>, edge: ResizeEdge) => {
+    if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     const panel = event.currentTarget.closest("section");
-    resizeStart.current = { x: event.clientX, y: event.clientY, width: panel?.clientWidth ?? 300, height: panel?.clientHeight ?? 260, size };
+    resizeStart.current = {
+      pointer: event.pointerId, edge, x: event.clientX, y: event.clientY,
+      width: panel?.clientWidth ?? 300, height: panel?.clientHeight ?? 260, size,
+    };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
   const resizePanel = (event: PointerEvent<HTMLButtonElement>) => {
     const start = resizeStart.current;
-    if (!start) return;
-    const deltaX = event.clientX - start.x;
+    if (!start || start.pointer !== event.pointerId) return;
+    const horizontal = start.edge.includes("e") || start.edge.includes("w");
+    const vertical = start.edge.includes("n") || start.edge.includes("s");
+    const dx = (event.clientX - start.x) * (start.edge.includes("w") ? -1 : 1);
+    const dy = (event.clientY - start.y) * (start.edge.includes("n") ? -1 : 1);
     const columnWidth = Math.max(35, start.width / start.size.columns);
-    const columns = Math.max(2, Math.min(12, Math.round(start.size.columns + deltaX / columnWidth)));
-    const height = Math.max(160, Math.min(1200, Math.round(start.height + event.clientY - start.y)));
+    const columns = horizontal
+      ? Math.max(2, Math.min(12, Math.round(start.size.columns + dx / columnWidth)))
+      : start.size.columns;
+    const height = vertical
+      ? Math.max(160, Math.min(1200, Math.round(start.height + dy)))
+      : start.size.height;
     onResize(id, { columns, height });
   };
+  const stopResize = (event: PointerEvent<HTMLButtonElement>) => {
+    if (resizeStart.current?.pointer !== event.pointerId) return;
+    resizeStart.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const edges = [
+    { edge: "n", className: "top-0 left-3 right-3 h-1.5 cursor-ns-resize", label: "superior" },
+    { edge: "s", className: "bottom-0 left-3 right-3 h-1.5 cursor-ns-resize", label: "inferior" },
+    { edge: "e", className: "right-0 top-3 bottom-3 w-1.5 cursor-ew-resize", label: "direita" },
+    { edge: "w", className: "left-0 top-3 bottom-3 w-1.5 cursor-ew-resize", label: "esquerda" },
+    { edge: "nw", className: "top-0 left-0 h-3 w-3 cursor-nwse-resize", label: "superior esquerdo" },
+    { edge: "ne", className: "top-0 right-0 h-3 w-3 cursor-nesw-resize", label: "superior direito" },
+    { edge: "sw", className: "bottom-0 left-0 h-3 w-3 cursor-nesw-resize", label: "inferior esquerdo" },
+    { edge: "se", className: "bottom-0 right-0 h-3 w-3 cursor-nwse-resize", label: "inferior direito" },
+  ] as const;
+
   return (
     <section
       className={cn("wmix-dock-panel relative flex min-w-0 flex-col rounded-sm border border-border bg-panel", dragging && "opacity-50")}
@@ -657,16 +685,20 @@ function DockPanel({
         </span>
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-1">{children}</div>
-      <button
-        type="button"
-        aria-label={`Redimensionar ${title}`}
-        title="Arraste para ajustar largura e altura do painel"
-        className="absolute bottom-0 right-0 z-10 h-5 w-5 cursor-nwse-resize touch-none rounded-tl-sm bg-panel-strong text-xs text-muted-foreground hover:text-primary"
-        onPointerDown={beginResize}
-        onPointerMove={resizePanel}
-        onPointerUp={() => { resizeStart.current = null; }}
-        onPointerCancel={() => { resizeStart.current = null; }}
-      >◢</button>
+      {edges.map(({ edge, className, label }) => (
+        <button
+          key={edge}
+          type="button"
+          aria-label={`Redimensionar ${title} pela borda ${label}`}
+          title={`Arraste a borda ${label} para redimensionar`}
+          className={cn("absolute z-10 touch-none bg-transparent hover:bg-primary/35 focus-visible:bg-primary/35 focus-visible:outline-none", className)}
+          onPointerDown={(event) => beginResize(event, edge)}
+          onPointerMove={resizePanel}
+          onPointerUp={stopResize}
+          onPointerCancel={stopResize}
+          onLostPointerCapture={() => { resizeStart.current = null; }}
+        />
+      ))}
     </section>
   );
 }
