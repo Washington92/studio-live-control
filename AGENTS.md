@@ -28,3 +28,4 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+- Broadcast engine: all video compositing runs in one requestAnimationFrame loop in src/components/studio/Studio.tsx reading state via a ref; render helpers are pure canvas functions in src/lib/broadcast/. Why: keeps 30/60fps without React re-render per frame.
