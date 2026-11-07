@@ -521,7 +521,8 @@ export function Studio() {
               )}
 
             </div>
-            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(min(100%,200px),1fr))] gap-2 overflow-auto p-2">
+            <div className="min-h-0 flex-1 overflow-auto p-2">
+              <div className="grid min-w-[1772px] grid-cols-10 auto-rows-min content-start gap-2">
               {inputs.map((inp, i) => {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
@@ -574,6 +575,7 @@ export function Studio() {
                   </div>
                 );
               })}
+              </div>
             </div>
           </div>
         </DockPanel>
