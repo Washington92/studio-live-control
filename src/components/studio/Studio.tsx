@@ -449,7 +449,7 @@ export function Studio() {
         </DockPanel>
         <DockPanel id="transitions" title="TRANSIÇÕES" order={dockOrder.indexOf("transitions")} size={dockSizes.transitions} onResize={resizeDock} dragging={draggingPanel === "transitions"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex flex-col gap-1.5 rounded-md border border-border bg-panel p-2">
-            <div className="text-center font-sans text-[10px] tracking-widest text-muted-foreground">TRANSIÇÃO</div>
+            <div className="text-xs font-semibold tracking-wide text-foreground">Transições</div>
             <div className="grid grid-cols-2 gap-1">
               <button onClick={cut} className="h-9 rounded-md border border-border bg-secondary text-xs font-bold hover:bg-accent">CUT</button>
               <button onClick={doAuto} className={cn("h-9 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
@@ -479,7 +479,7 @@ export function Studio() {
         <DockPanel id="inputs" title="ENTRADAS" order={dockOrder.indexOf("inputs")} size={dockSizes.inputs} onResize={resizeDock} dragging={draggingPanel === "inputs"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex min-h-0 flex-col rounded-md border border-border bg-panel font-sans text-xs">
             <div className="flex items-center gap-1 border-b border-border px-2 py-1">
-              <span className="mr-2 text-xs font-semibold tracking-wide text-muted-foreground">ENTRADAS · {inputs.length}</span>
+              <span className="mr-2 text-xs font-semibold tracking-wide text-foreground">Entradas · {inputs.length}</span>
               <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-md border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></button>
               <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-md border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></button>
               <button type="button" aria-label="Configurações da fonte selecionada" title="Renomear fonte selecionada" disabled={!selectedInputId} onClick={configureSelectedInput} className="rounded-md border border-border bg-secondary p-1 hover:text-primary disabled:opacity-40"><Settings className="h-4 w-4" /></button>
@@ -619,7 +619,7 @@ export function Studio() {
           </div>
         </DockPanel>
         <DockPanel id="mixer" title="MIXER DE ÁUDIO" order={dockOrder.indexOf("mixer")} size={dockSizes.mixer} onResize={resizeDock} dragging={draggingPanel === "mixer"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
-<section className="flex h-full min-h-[250px] min-w-0 gap-2 overflow-x-auto rounded-md border border-border bg-panel p-2">
+<section className="flex h-full min-h-[250px] min-w-0 flex-col gap-2 overflow-hidden rounded-md border border-border bg-panel p-2">\n          <div className="shrink-0 text-xs font-semibold tracking-wide text-foreground">Mixer de áudio</div>\n          <div className="flex min-h-0 min-w-0 flex-1 gap-2 overflow-x-auto">
           <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
             {inputs.map((inp) => channels[inp.id] && (
               <Strip key={inp.id} name={inp.name} ch={channels[inp.id]!} level={levels[inp.id]} onAir={tallyOf(inp.id) === "pgm"}
@@ -632,6 +632,7 @@ export function Studio() {
               <Strip key={k} isBus name={k === "master" ? "MASTER" : k.toUpperCase()} ch={buses[k]!} level={levels[k]} onAir={k === "master" && !!live}
                 onChange={(c) => setBuses((s) => ({ ...s, [k]: { ...s[k]!, ...c } }))} />
             ))}
+          </div>
           </div>
         </section>
         </DockPanel>
@@ -794,7 +795,7 @@ function Timer({ label, since, now }: { label: string; since: number | null; now
 function MonitorBox({ title, tone, source, safe, children }: { title: string; tone: "pvw" | "pgm"; source: string; safe: boolean; children: React.ReactNode }) {
   return (
     <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border-2 bg-black", tone === "pgm" ? "border-pgm" : "border-pvw")}>
-      <div className={cn("flex shrink-0 items-center justify-between gap-2 px-2 py-0.5 font-sans text-[10px] font-bold", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
+      <div className={cn("flex shrink-0 items-center justify-between gap-2 px-2 py-1 font-sans text-xs font-semibold tracking-wide", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
         <span>{title}</span><span className="truncate">{source}</span>
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden">
