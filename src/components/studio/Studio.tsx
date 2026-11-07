@@ -40,7 +40,7 @@ export function Studio() {
   const [dockOrder, setDockOrder] = useState<DockId[]>(readDockOrder);
   const [dockSizes, setDockSizes] = useState<DockSizes>(readDockSizes);
   const [draggingPanel, setDraggingPanel] = useState<DockId | null>(null);
-  const [inputsActionsOpen, setInputsActionsOpen] = useState(true);
+  const [inputsActionsOpen, setInputsActionsOpen] = useState(false);
   const [selectedInputId, setSelectedInputId] = useState<string | null>(INITIAL[0]!.id);
   const [monitorInputId, setMonitorInputId] = useState<string | null>(null);
   const [monitorError, setMonitorError] = useState("");
@@ -529,8 +529,8 @@ export function Studio() {
         </DockPanel>
         <DockPanel id="inputs" title="ENTRADAS" order={dockOrder.indexOf("inputs")} size={dockSizes.inputs} onResize={resizeDock} dragging={draggingPanel === "inputs"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel}>
 <div className="flex min-h-0 flex-col rounded-md border border-border bg-panel font-sans text-xs">
-            <div className="flex items-center gap-1 border-b border-border px-2 py-1">
-              <span className="mr-2 text-xs font-semibold tracking-wide text-foreground">Entradas · {inputs.length}</span>
+            <div className="flex flex-wrap items-center gap-1 px-2 pt-2 pb-1">
+              <span className="mr-2 inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-foreground"><Video className="h-3.5 w-3.5 text-muted-foreground" />Entradas · {inputs.length}</span>
               {monitorError && <span role="alert" className="max-w-48 truncate text-[10px] text-pgm" title={monitorError}>{monitorError}</span>}
               <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-md border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></button>
               <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-md border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></button>
@@ -554,7 +554,7 @@ export function Studio() {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
-                  <div key={inp.id} className={cn("group overflow-hidden rounded-md border-2 bg-panel-strong", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
+                  <div key={inp.id} className={cn("group overflow-hidden rounded-xl border-2 bg-panel-strong transition-colors", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
                     <div className="flex items-stretch bg-black">
                       <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block min-w-0 flex-1 aspect-video overflow-hidden bg-black">
                         <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="absolute inset-0 h-full w-full object-contain" />
@@ -577,7 +577,7 @@ export function Studio() {
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 px-1.5 py-1">
+                    <div className="flex items-center gap-1 bg-panel px-1.5 py-1.5">
                       <Icon className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="flex-1 truncate text-xs font-medium">{inp.name}</span>
                       <button type="button"
@@ -589,9 +589,9 @@ export function Studio() {
                         className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-30", monitorInputId === inp.id ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground hover:text-foreground")}
                       ><Headphones className="h-3.5 w-3.5" /></button>
                       <button onClick={() => setPgm(inp.id)} className="rounded-md bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
-                      <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
+                      <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
                     </div>
-                    <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
+                    <div className="flex items-center gap-1 px-1.5 pb-1.5">
                       <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
                         onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
                         className={cn("rounded-md border px-1.5 py-0.5 text-[10px] font-semibold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</button>
