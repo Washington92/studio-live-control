@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type DragEvent, type PointerEvent, type ReactNode } from "react";
-import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3, Grip, Volume2, VolumeX, Headphones } from "lucide-react";
+import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3, Grip, Volume2, VolumeX, Headphones, GripVertical } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
@@ -39,8 +39,24 @@ export function Studio() {
   const [inputs, setInputs] = useState<Input[]>(INITIAL);
   const [inputGroups, setInputGroups] = useState<{ id: string; name: string }[]>([{ id: "all", name: "Todas" }]);
   const [activeInputGroup, setActiveInputGroup] = useState("all");
+  const [draggedInputId, setDraggedInputId] = useState<string | null>(null);
+  const [hoveredInputGroup, setHoveredInputGroup] = useState<string | null>(null);
   const [inputGroupAssignments, setInputGroupAssignments] = useState<Record<string, string>>({});
   const visibleInputs = activeInputGroup === "all" ? inputs : inputs.filter((item) => inputGroupAssignments[item.id] === activeInputGroup);
+  const moveInputToGroup = (id: string, groupId: string) => {
+    if (!inputs.some((item) => item.id === id) || !inputGroups.some((group) => group.id === groupId)) return;
+    setInputGroupAssignments((current) => ({ ...current, [id]: groupId }));
+    setSelectedInputId(id);
+  };
+  const dropInputOnGroup = (event: DragEvent<HTMLElement>, groupId: string) => {
+    const id = event.dataTransfer.getData("application/x-wmix-input");
+    if (!id) return;
+    event.preventDefault();
+    event.stopPropagation();
+    moveInputToGroup(id, groupId);
+    setDraggedInputId(null);
+    setHoveredInputGroup(null);
+  };
   const createInputGroup = () => {
     const name = window.prompt("Nome do novo grupo de entradas")?.trim();
     if (!name) return;
@@ -576,8 +592,11 @@ export function Studio() {
             <div className="flex flex-wrap items-center gap-1 px-2 pb-1" aria-label="Grupos de entradas">
               {inputGroups.map((group) => (
                 <button key={group.id} type="button" onClick={() => setActiveInputGroup(group.id)}
+                  onDragOver={(event) => { if (!event.dataTransfer.types.includes("application/x-wmix-input")) return; event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = "move"; setHoveredInputGroup(group.id); }}
+                  onDragLeave={() => setHoveredInputGroup((current) => current === group.id ? null : current)}
+                  onDrop={(event) => dropInputOnGroup(event, group.id)}
                   aria-pressed={activeInputGroup === group.id}
-                  className={cn("rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors", activeInputGroup === group.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>
+                  className={cn("rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors", hoveredInputGroup === group.id && draggedInputId ? "border-primary bg-primary/30 text-primary ring-1 ring-primary" : activeInputGroup === group.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>
                   {group.name} · {group.id === "all" ? inputs.length : inputs.filter((item) => inputGroupAssignments[item.id] === group.id).length}
                 </button>
               ))}
@@ -604,7 +623,15 @@ export function Studio() {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
-                  <div key={inp.id} className={cn("group overflow-hidden rounded-xl border-2 bg-panel-strong transition-colors", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
+                  <div key={inp.id} className={cn("group relative overflow-hidden rounded-xl border-2 bg-panel-strong transition-colors", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
+                    <div draggable
+                      onDragStart={(event) => { event.stopPropagation(); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("application/x-wmix-input", inp.id); setDraggedInputId(inp.id); }}
+                      onDragEnd={() => { setDraggedInputId(null); setHoveredInputGroup(null); }}
+                      title={`Arraste ${inp.name} para uma aba de grupo`}
+                      aria-label={`Arrastar ${inp.name} para um grupo`}
+                      className="absolute bottom-1.5 right-1.5 z-10 flex h-5 w-5 cursor-grab items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-primary active:cursor-grabbing">
+                      <GripVertical className="h-3.5 w-3.5" />
+                    </div>
                     <div className="flex items-stretch bg-black">
                       <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block min-w-0 flex-1 aspect-video overflow-hidden bg-black">
                         <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="absolute inset-0 h-full w-full object-contain" />
@@ -647,7 +674,7 @@ export function Studio() {
                         className={cn("rounded-md border px-1.5 py-0.5 text-[10px] font-semibold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</button>
                       <button type="button" title="Configurações da entrada" aria-label={`Configurações de ${inp.name}`}
                         onClick={() => { setSettingsInputId(inp.id); setSettingsTab("geral"); }}
-                        className="ml-auto rounded-md border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
+                        className="ml-auto mr-5 rounded-md border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
                     </div>
                   </div>
                 );
