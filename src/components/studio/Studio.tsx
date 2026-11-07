@@ -3,6 +3,7 @@ import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Tv, 
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
+import { WhipPublisher } from "@/lib/broadcast/whip-output";
 import { cn } from "@/lib/utils";
 import { Meter, Strip, type Channel, type Level } from "./Mixer";
 
@@ -57,6 +58,11 @@ export function Studio() {
   });
   const [levels, setLevels] = useState<Record<string, Level>>({});
   const [live, setLive] = useState<number | null>(null);
+  const [whipSettingsOpen, setWhipSettingsOpen] = useState(false);
+  const [whipEndpoint, setWhipEndpoint] = useState("");
+  const [whipToken, setWhipToken] = useState("");
+  const [whipBusy, setWhipBusy] = useState(false);
+  const [whipError, setWhipError] = useState("");
   const [rec, setRec] = useState<number | null>(null);
   const [tele, setTele] = useState({ fps: 0, render: 0, mem: 0, load: 0, dropped: 0 });
   const [now, setNow] = useState(0);
@@ -73,6 +79,8 @@ export function Studio() {
   const peaks = useRef<Record<string, number>>({});
   const recorder = useRef<MediaRecorder | null>(null);
   const output = useRef<ProgramOutputEngine | null>(null);
+  const whipOutput = useRef<ProgramOutputEngine | null>(null);
+  const whipPublisher = useRef<WhipPublisher | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const S = useRef({ inputs, pgm, pvw, trType, dur, ftb, dsk, channels, buses });
@@ -125,6 +133,15 @@ export function Studio() {
         if (isPgm && ftbAlpha.current > 0.005) { ctx.fillStyle = `rgba(0,0,0,${ftbAlpha.current})`; ctx.fillRect(0, 0, cv.width, cv.height); }
       }
       // Route the real Program audio to the recording bus; keep visual meters unchanged.
+      whipOutput.current?.update({
+        inputs: st.inputs,
+        channels: st.channels,
+        master: st.buses.master,
+        programId: st.pgm,
+        previewId: st.pvw,
+        transition: prog.current,
+        fadeToBlack: ftbAlpha.current,
+      });
       output.current?.update({
         inputs: st.inputs,
         channels: st.channels,
@@ -221,6 +238,55 @@ export function Studio() {
     srcCanvases.current.delete(id);
   };
 
+  const stopWhip = async () => {
+    const publisher = whipPublisher.current;
+    const engine = whipOutput.current;
+    whipPublisher.current = null;
+    whipOutput.current = null;
+    setLive(null);
+    engine?.stop();
+    await publisher?.stop();
+  };
+
+  const startWhip = async () => {
+    const canvas = pgmRef.current;
+    if (!canvas || whipBusy) return;
+    setWhipBusy(true);
+    setWhipError("");
+    const engine = new ProgramOutputEngine(canvas);
+    const publisher = new WhipPublisher(() => {
+      setWhipError("A transmissão WHIP perdeu a conexão.");
+      setWhipSettingsOpen(true);
+      void stopWhip();
+    });
+    try {
+      const stream = engine.start();
+      const st = S.current;
+      engine.update({
+        inputs: st.inputs, channels: st.channels, master: st.buses.master,
+        programId: st.pgm, previewId: st.pvw,
+        transition: prog.current, fadeToBlack: ftbAlpha.current,
+      });
+      whipOutput.current = engine;
+      whipPublisher.current = publisher;
+      await publisher.start(stream, whipEndpoint, whipToken);
+      setLive(Date.now());
+      setWhipToken("");
+      setWhipSettingsOpen(false);
+    } catch (error) {
+      if (whipPublisher.current === publisher) {
+        whipPublisher.current = null;
+        whipOutput.current = null;
+      }
+      engine.stop();
+      await publisher.stop();
+      setLive(null);
+      setWhipError(error instanceof Error ? error.message : "Falha ao iniciar transmissão WHIP.");
+    } finally {
+      setWhipBusy(false);
+    }
+  };
+
   const toggleRec = () => {
     if (recorder.current) {
       if (recorder.current.state !== "inactive") recorder.current.stop();
@@ -297,10 +363,34 @@ export function Studio() {
         <button onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-sm border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
           {rec ? <Square className="h-3 w-3 fill-current" /> : <Circle className="h-3 w-3 fill-pgm text-pgm" />} {rec ? "PARAR REC" : "GRAVAR"}
         </button>
-        <button onClick={() => setLive((l) => (l ? null : Date.now()))} className={cn("flex h-8 items-center gap-2 rounded-sm border px-3 text-xs font-bold tracking-wider", live ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
+        <button disabled={whipBusy} onClick={() => { if (live) void stopWhip(); else setWhipSettingsOpen(true); }} className={cn("flex h-8 items-center gap-2 rounded-sm border px-3 text-xs font-bold tracking-wider", live ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
           <Radio className="h-4 w-4" /> {live ? "NO AR" : "TRANSMITIR"}
         </button>
       </header>
+
+      {whipSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+          <section role="dialog" aria-modal="true" aria-label="Configurar transmissão WHIP" className="w-full max-w-md space-y-3 rounded-md border border-border bg-panel p-5 shadow-2xl">
+            <h2 className="text-base font-bold">Transmissão ao vivo · WebRTC/WHIP</h2>
+            <p className="text-xs text-muted-foreground">Transmite o Program e o áudio Master para um destino WHIP HTTPS. RTMP/RTMPS (YouTube) ainda não está disponível nesta versão.</p>
+            <label className="block space-y-1 text-xs">
+              <span>URL WHIP (HTTPS)</span>
+              <input className="w-full rounded-sm border border-border bg-input-bg p-2 text-foreground" type="url" value={whipEndpoint} onChange={(event) => setWhipEndpoint(event.target.value)} placeholder="https://servidor.exemplo/whip" autoComplete="off" />
+            </label>
+            <label className="block space-y-1 text-xs">
+              <span>Token Bearer (opcional)</span>
+              <input className="w-full rounded-sm border border-border bg-input-bg p-2 text-foreground" type="password" value={whipToken} onChange={(event) => setWhipToken(event.target.value)} placeholder="Não será armazenado" autoComplete="off" />
+            </label>
+            {whipError && <p role="alert" className="rounded-sm border border-pgm p-2 text-xs text-pgm">{whipError}</p>}
+            <div className="flex justify-end gap-2">
+              <button type="button" disabled={whipBusy} className="rounded-sm border border-border bg-secondary px-3 py-2 text-xs" onClick={() => { setWhipSettingsOpen(false); setWhipError(""); setWhipToken(""); }}>Cancelar</button>
+              <button type="button" disabled={whipBusy || !whipEndpoint.trim()} className="rounded-sm bg-pgm px-3 py-2 text-xs font-bold text-pgm-foreground disabled:opacity-50" onClick={() => void startWhip()}>
+                {whipBusy ? "Conectando..." : "Iniciar transmissão"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <main className="flex min-h-0 flex-1 flex-col gap-2 p-2">
         {/* MONITORS + TRANSITIONS */}
