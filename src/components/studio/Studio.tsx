@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Tv, Video, Grid3x3 } from "lucide-react";
+import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Video, Grid3x3 } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
@@ -347,8 +347,7 @@ export function Studio() {
       {/* TOP TELEMETRY */}
       <header className="flex h-12 shrink-0 items-center gap-4 border-b border-border bg-panel-strong px-3">
         <div className="flex items-center gap-2">
-          <Tv className="h-5 w-5 text-pgm" />
-          <span className="text-sm font-bold tracking-[0.2em]">BROADCAST<span className="text-muted-foreground">·STUDIO</span></span>
+          <img src="/wmix-logo.svg" alt="wMix" className="h-8 w-auto max-w-[125px] object-contain" />
         </div>
         <div className="mx-2 h-6 w-px bg-border" />
         <Tele label="FPS" value={tele.fps.toFixed(1)} warn={tele.fps < 50} />
