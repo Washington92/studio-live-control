@@ -509,19 +509,15 @@ export function Studio() {
                         {tally && <span className={cn("absolute right-1 top-1 rounded-md px-1 text-[10px] font-semibold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
                         <div className="absolute bottom-1 right-1 flex h-8 gap-px"><Meter level={levels[inp.id]} className="w-1" /></div>
                       </button>
-                      <div className="flex w-10 shrink-0 flex-col items-center gap-1 border-l border-border/70 bg-panel-strong/70 px-1 py-1.5">
-                        <span className="text-[10px] font-semibold text-muted-foreground">VOL</span>
-                        <div className="flex min-h-[70px] w-full flex-1 justify-center overflow-hidden">
-                          <input type="range" min={0} max={1000} step={1}
-                            value={Math.round(audio.fader * 1000)}
-                            onChange={(event) => updateInputAudio(inp.id, { fader: Number(event.target.value) / 1000 })}
-                            onDoubleClick={() => updateInputAudio(inp.id, { fader: 0.75 })}
-                            aria-label={`Volume de ${inp.name}`}
-                            title={`Volume: ${audio.fader === 0 ? "-∞" : faderToDb(audio.fader).toFixed(0)} dB`}
-                            className="fader"
-                          />
-                        </div>
-                        <span className="text-[10px] tabular-nums text-muted-foreground">{Math.round(audio.fader * 100)}%</span>
+                      <div className="flex w-7 shrink-0 flex-col items-center justify-center gap-0.5 border-l border-border/50 bg-panel/70 px-0.5 py-1">
+                        <input type="range" min={0} max={1000} step={1}
+                          value={Math.round(audio.fader * 1000)}
+                          onChange={(event) => updateInputAudio(inp.id, { fader: Number(event.target.value) / 1000 })}
+                          onDoubleClick={() => updateInputAudio(inp.id, { fader: 0.75 })}
+                          aria-label={`Volume de ${inp.name}`}
+                          title={`Volume: ${audio.fader === 0 ? "-∞" : faderToDb(audio.fader).toFixed(0)} dB`}
+                          className="input-mini-fader"
+                        />
                       </div>
                     </div>
                     <div className="flex items-center gap-1 px-1.5 py-1">
