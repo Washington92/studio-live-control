@@ -522,7 +522,7 @@ export function Studio() {
 
             </div>
             <div className="min-h-0 flex-1 overflow-auto p-2">
-              <div className="grid auto-rows-min content-start gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(10, Math.max(1, inputs.length))}, minmax(170px, 1fr))`, minWidth: `${Math.min(10, Math.max(1, inputs.length)) * 170 + (Math.min(10, Math.max(1, inputs.length)) - 1) * 8}px` }}>
+              <div className="grid w-max auto-rows-max content-start gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(10, Math.max(1, inputs.length))}, 190px)` }}>
               {inputs.map((inp, i) => {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
