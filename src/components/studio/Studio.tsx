@@ -7,7 +7,7 @@ import { WhipPublisher } from "@/lib/broadcast/whip-output";
 import { cn } from "@/lib/utils";
 import { Meter, Strip, type Channel, type Level } from "./Mixer";
 
-const TRANSITIONS: TransitionType[] = ["MIX", "FADE", "SLIDE", "WIPE", "STINGER"];
+const TRANSITIONS: TransitionType[] = ["MIX", "FADE", "SLIDE", "WIPE", "STINGER", "PUSH", "ZOOM", "BLUR", "CIRCLE WIPE", "FLIP"];
 let idSeq = 0;
 const newId = () => `in${++idSeq}`;
 
@@ -487,6 +487,11 @@ export function Studio() {
                         {t === "SLIDE" && <span className="flex h-full w-full"><span className="h-full w-1/2 border-r border-current bg-current/35" /><span className="h-full w-1/2" /></span>}
                         {t === "WIPE" && <span className="h-full w-1/2 self-start bg-current/60" />}
                         {t === "STINGER" && <span className="text-[11px] font-bold leading-none">✦</span>}
+                        {t === "PUSH" && <span className="text-[10px] font-bold">→</span>}
+                        {t === "ZOOM" && <span className="text-[10px] font-bold">⊕</span>}
+                        {t === "BLUR" && <span className="text-[10px] font-bold opacity-50">▧</span>}
+                        {t === "CIRCLE WIPE" && <span className="text-[11px] font-bold">◉</span>}
+                        {t === "FLIP" && <span className="text-[10px] font-bold">⇄</span>}
                       </span>
                       <span className="text-[9px] font-semibold">{t}</span>
                     </button>
