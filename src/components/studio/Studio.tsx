@@ -37,6 +37,30 @@ const KIND_ICON: Record<SourceKind, typeof Camera> = { sim: Video, camera: Camer
 
 export function Studio() {
   const [inputs, setInputs] = useState<Input[]>(INITIAL);
+  const [inputGroups, setInputGroups] = useState<{ id: string; name: string }[]>([{ id: "all", name: "Todas" }]);
+  const [activeInputGroup, setActiveInputGroup] = useState("all");
+  const [inputGroupAssignments, setInputGroupAssignments] = useState<Record<string, string>>({});
+  const visibleInputs = activeInputGroup === "all" ? inputs : inputs.filter((item) => inputGroupAssignments[item.id] === activeInputGroup);
+  const createInputGroup = () => {
+    const name = window.prompt("Nome do novo grupo de entradas")?.trim();
+    if (!name) return;
+    const id = `group-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setInputGroups((current) => [...current, { id, name }]);
+    setActiveInputGroup(id);
+  };
+  const renameInputGroup = () => {
+    if (activeInputGroup === "all") return;
+    const group = inputGroups.find((item) => item.id === activeInputGroup);
+    const name = window.prompt("Renomear grupo", group?.name)?.trim();
+    if (name) setInputGroups((current) => current.map((item) => item.id === activeInputGroup ? { ...item, name } : item));
+  };
+  const deleteInputGroup = () => {
+    if (activeInputGroup === "all") return;
+    if (!window.confirm("Excluir este grupo? As entradas serão mantidas em Todas.")) return;
+    setInputGroups((current) => current.filter((item) => item.id !== activeInputGroup));
+    setInputGroupAssignments((current) => Object.fromEntries(Object.entries(current).filter(([, groupId]) => groupId !== activeInputGroup)));
+    setActiveInputGroup("all");
+  };
   const [dockOrder, setDockOrder] = useState<DockId[]>(readDockOrder);
   const [dockSizes, setDockSizes] = useState<DockSizes>(readDockSizes);
   const [draggingPanel, setDraggingPanel] = useState<DockId | null>(null);
@@ -270,6 +294,7 @@ export function Studio() {
     const inp = inputs.find((i) => i.id === id);
     inp?.stream?.getTracks().forEach((t) => t.stop());
     setInputs((l) => l.filter((i) => i.id !== id));
+    setInputGroupAssignments((current) => Object.fromEntries(Object.entries(current).filter(([inputId]) => inputId !== id)));
     setSelectedInputId((current) => current === id ? null : current);
     setSettingsInputId((current) => current === id ? null : current);
     srcCanvases.current.delete(id);
@@ -548,9 +573,34 @@ export function Studio() {
               )}
 
             </div>
+            <div className="flex flex-wrap items-center gap-1 px-2 pb-1" aria-label="Grupos de entradas">
+              {inputGroups.map((group) => (
+                <button key={group.id} type="button" onClick={() => setActiveInputGroup(group.id)}
+                  aria-pressed={activeInputGroup === group.id}
+                  className={cn("rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors", activeInputGroup === group.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>
+                  {group.name} · {group.id === "all" ? inputs.length : inputs.filter((item) => inputGroupAssignments[item.id] === group.id).length}
+                </button>
+              ))}
+              <button type="button" onClick={createInputGroup} aria-label="Criar grupo" title="Criar grupo" className="rounded-md border border-border p-1 text-muted-foreground hover:text-primary"><Plus className="h-3.5 w-3.5" /></button>
+              {activeInputGroup !== "all" && (
+                <>
+                  <button type="button" onClick={renameInputGroup} aria-label="Renomear grupo" title="Renomear grupo" className="rounded-md border border-border p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={deleteInputGroup} aria-label="Excluir grupo" title="Excluir grupo sem remover entradas" className="rounded-md border border-border p-1 text-muted-foreground hover:text-pgm"><Trash2 className="h-3.5 w-3.5" /></button>
+                </>
+              )}
+              <select aria-label="Mover entrada selecionada para grupo" title="Atribuir entrada selecionada a um grupo"
+                disabled={!selectedInputId}
+                value={selectedInputId ? inputGroupAssignments[selectedInputId] ?? "all" : "all"}
+                onChange={(event) => { if (!selectedInputId) return; setInputGroupAssignments((current) => ({ ...current, [selectedInputId]: event.target.value })); }}
+                className="ml-auto max-w-36 rounded-md border border-border bg-secondary px-1 py-1 text-[10px] text-foreground disabled:opacity-40">
+                <option value="all">Sem grupo</option>
+                {inputGroups.filter((group) => group.id !== "all").map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+              </select>
+            </div>
             <div className="min-h-0 flex-1 overflow-auto p-2">
-              <div className="grid w-max auto-rows-max content-start gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(10, Math.max(1, inputs.length))}, 190px)` }}>
-              {inputs.map((inp, i) => {
+              <div className="grid w-max auto-rows-max content-start gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(10, Math.max(1, visibleInputs.length))}, 190px)` }}>
+              {visibleInputs.map((inp) => {
+                const i = inputs.findIndex((item) => item.id === inp.id);
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
