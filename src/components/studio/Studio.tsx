@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type DragEvent, type PointerEvent, type ReactNode } from "react";
-import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3 } from "lucide-react";
+import { Camera, Circle, Film, Globe, Monitor, Plus, Minus, Settings, Radio, Square, Trash2, Video, Grid3x3, RotateCcw, Grip } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
@@ -750,17 +750,33 @@ function DockPanel({
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
       onDrop={(event) => onDrop(event, id)}
     >
-      <div className="flex h-7 shrink-0 items-center justify-between border-b border-border bg-panel-strong px-2">
-        <span
-          draggable
-          onDragStart={(event) => onDragStart(event, id)}
-          onDragEnd={onDragEnd}
-          className="flex flex-1 cursor-grab items-center gap-2 font-sans text-[10px] font-bold tracking-wider text-muted-foreground active:cursor-grabbing"
-          title="Arraste para encaixar este painel"
-          aria-label={`Arrastar painel ${title}`}
+      <div
+        draggable
+        onDragStart={(event) => onDragStart(event, id)}
+        onDragEnd={onDragEnd}
+        className="flex h-7 shrink-0 cursor-grab items-center justify-between gap-2 border-b border-border bg-panel-strong px-2 select-none active:cursor-grabbing"
+        title={`Arraste para mover o painel ${title}`}
+        aria-label={`Arrastar painel ${title}`}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <Grip aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+          <span className="truncate font-sans text-[10px] font-semibold tracking-wider text-foreground/85">{title}</span>
+        </div>
+        <button
+          type="button"
+          draggable={false}
+          onDragStart={(event) => event.preventDefault()}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onResize(id, { ...DEFAULT_DOCK_SIZES[id] });
+          }}
+          aria-label={`Restaurar tamanho de ${title}`}
+          title="Restaurar tamanho original"
+          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
-          <span aria-hidden="true">⠿</span>{title}
-        </span>
+          <RotateCcw aria-hidden="true" className="h-3 w-3" />
+        </button>
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-1">{children}</div>
       <button
