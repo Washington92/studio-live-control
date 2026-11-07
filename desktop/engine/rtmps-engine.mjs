@@ -42,8 +42,10 @@ export function buildFfmpegArgs(destination, bitrateKbps = 4500) {
 export function redactSecrets(message, destination) {
   if (!destination) return String(message);
   const url = new URL(destination);
-  const secret = url.pathname.replace(/^\/+/, "");
+  const path = url.pathname.replace(/^\/+/, "");
+  const secret = path.split("/").filter(Boolean).at(-1);
   let clean = String(message).split(destination).join("[destino RTMPS oculto]");
+  if (path) clean = clean.split(path).join("[caminho oculto]");
   if (secret) clean = clean.split(secret).join("[chave oculta]");
   return clean;
 }
