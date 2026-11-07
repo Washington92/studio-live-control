@@ -494,7 +494,7 @@ export function Studio() {
               <input ref={fileRef} type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ""; }} />
                 </>
               )}
-              <span className="ml-auto text-[10px] text-muted-foreground">1-9 PVW · ⇧1-9 PGM · ESPAÇO CUT · ENTER AUTO · B FTB</span>
+
             </div>
             <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2 overflow-auto p-2">
               {inputs.map((inp, i) => {
