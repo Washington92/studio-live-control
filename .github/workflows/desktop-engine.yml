@@ -1,0 +1,20 @@
+name: Windows RTMPS engine checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-engine.yml'
+  workflow_dispatch:
+
+jobs:
+  engine:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate RTMPS engine
+        run: node --test desktop/engine/rtmps-engine.test.mjs
