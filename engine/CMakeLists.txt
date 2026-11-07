@@ -10,3 +10,8 @@ else()
 endif()
 enable_testing()
 add_test(NAME engine_selftest COMMAND wmix-engine --selftest)
+
+option(WMIX_WITH_LIBOBS "Build experimental libobs smoke test" OFF)
+if(WMIX_WITH_LIBOBS)
+  add_subdirectory(obs)
+endif()
