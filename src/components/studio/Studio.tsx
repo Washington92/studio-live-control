@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Camera, Circle, Film, Globe, Monitor, Plus, Radio, Square, Trash2, Video, Grid3x3 } from "lucide-react";
 import { composite, drawOverlays, drawSource, SH, SW, type Dsk, type DskAlpha, type Input, type SourceKind, type TransitionType } from "@/lib/broadcast/render";
 import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
@@ -37,6 +37,9 @@ const KIND_ICON: Record<SourceKind, typeof Camera> = { sim: Video, camera: Camer
 
 export function Studio() {
   const [inputs, setInputs] = useState<Input[]>(INITIAL);
+  const [dockOrder, setDockOrder] = useState<DockId[]>(readDockOrder);
+  const [draggingPanel, setDraggingPanel] = useState<DockId | null>(null);
+  const [inputsActionsOpen, setInputsActionsOpen] = useState(true);
   const [pgm, setPgm] = useState(INITIAL[0]!.id);
   const [pvw, setPvw] = useState(INITIAL[1]!.id);
   const [trType, setTrType] = useState<TransitionType>("MIX");
@@ -82,6 +85,30 @@ export function Studio() {
   const whipOutput = useRef<ProgramOutputEngine | null>(null);
   const whipPublisher = useRef<WhipPublisher | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try { window.localStorage.setItem(DOCK_STORAGE_KEY, JSON.stringify(dockOrder)); }
+    catch { /* Private browsing or disabled storage: layout stays in memory. */ }
+  }, [dockOrder]);
+
+  const startPanelDrag = (event: DragEvent<HTMLElement>, id: DockId) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", id);
+    setDraggingPanel(id);
+  };
+  const dropPanel = (event: DragEvent<HTMLElement>, target: DockId) => {
+    event.preventDefault();
+    const source = event.dataTransfer.getData("text/plain");
+    if (isDockId(source)) setDockOrder((current) => moveDockPanel(current, source, target));
+    setDraggingPanel(null);
+  };
+  const movePanel = (id: DockId, delta: number) => {
+    setDockOrder((current) => {
+      const index = current.indexOf(id);
+      const target = current[Math.max(0, Math.min(current.length - 1, index + delta))];
+      return target ? moveDockPanel(current, id, target) : current;
+    });
+  };
 
   const S = useRef({ inputs, pgm, pvw, trType, dur, ftb, dsk, channels, buses });
   S.current = { inputs, pgm, pvw, trType, dur, ftb, dsk, channels, buses };
@@ -385,11 +412,13 @@ export function Studio() {
         </div>
       )}
 
-      <main className="flex min-h-0 flex-1 flex-col gap-2 p-2">
-        {/* MONITORS + TRANSITIONS */}
-        <section className="grid shrink-0 grid-cols-[1fr_190px_1fr] gap-2">
-          <MonitorBox title="PREVIEW" tone="pvw" source={nameOf(pvw)} safe={safe}><canvas ref={pvwRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
-          <div className="flex flex-col gap-1.5 rounded-sm border border-border bg-panel p-2">
+      <main className="min-h-0 flex-1 overflow-auto p-2">
+        <div className="grid grid-cols-1 items-start gap-2 lg:grid-cols-3">
+        <DockPanel id="preview" title="PREVIEW" order={dockOrder.indexOf("preview")} span={1} minHeight={0} dragging={draggingPanel === "preview"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel} onMove={movePanel}>
+<MonitorBox title="PREVIEW" tone="pvw" source={nameOf(pvw)} safe={safe}><canvas ref={pvwRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
+        </DockPanel>
+        <DockPanel id="transitions" title="TRANSIÇÕES" order={dockOrder.indexOf("transitions")} span={1} minHeight={0} dragging={draggingPanel === "transitions"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel} onMove={movePanel}>
+<div className="flex flex-col gap-1.5 rounded-sm border border-border bg-panel p-2">
             <div className="text-center font-mono text-[10px] tracking-widest text-muted-foreground">TRANSIÇÃO</div>
             <div className="grid grid-cols-2 gap-1">
               <button onClick={cut} className="h-9 rounded-sm border border-border bg-secondary text-xs font-bold hover:bg-accent">CUT</button>
@@ -413,14 +442,16 @@ export function Studio() {
             <button onClick={() => setFtb((f) => !f)} className={cn("h-8 rounded-sm border text-xs font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</button>
             <button onClick={() => setSafe((s) => !s)} className={cn("h-6 rounded-sm border text-[9px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
           </div>
-          <MonitorBox title="PROGRAM" tone="pgm" source={nameOf(pgm)} safe={safe}><canvas ref={pgmRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
-        </section>
-
-        {/* INPUTS + DSK */}
-        <section className="grid min-h-0 flex-1 grid-cols-[1fr_300px] gap-2">
-          <div className="flex min-h-0 flex-col rounded-sm border border-border bg-panel">
+        </DockPanel>
+        <DockPanel id="program" title="PROGRAM" order={dockOrder.indexOf("program")} span={1} minHeight={0} dragging={draggingPanel === "program"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel} onMove={movePanel}>
+<MonitorBox title="PROGRAM" tone="pgm" source={nameOf(pgm)} safe={safe}><canvas ref={pgmRef} width={960} height={540} className="h-full w-full" /></MonitorBox>
+        </DockPanel>
+        <DockPanel id="inputs" title="ENTRADAS" order={dockOrder.indexOf("inputs")} span={2} minHeight={260} dragging={draggingPanel === "inputs"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel} onMove={movePanel}>
+<div className="flex min-h-0 flex-col rounded-sm border border-border bg-panel">
             <div className="flex items-center gap-1 border-b border-border px-2 py-1">
               <span className="mr-2 font-mono text-[10px] tracking-widest text-muted-foreground">ENTRADAS · {inputs.length}</span>
+              <button type="button" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className={cn("rounded-sm border px-2 py-1 font-mono text-[10px] font-bold", inputsActionsOpen ? "border-primary text-primary" : "border-border bg-secondary text-muted-foreground")}>INPUTS</button>
+              {inputsActionsOpen && (
               <AddBtn icon={Camera} label="Webcam" onClick={addCamera} />
               <AddBtn icon={Monitor} label="Tela" onClick={addScreen} />
               <AddBtn icon={Film} label="Vídeo" onClick={() => fileRef.current?.click()} />
@@ -428,6 +459,7 @@ export function Studio() {
               <AddBtn icon={Globe} label="Web" onClick={() => addInput(mkInput("web", "Fonte Web"))} />
               <AddBtn icon={Plus} label="Câm. Sim" onClick={() => addInput(mkInput("sim", `Câmera ${inputs.length + 1}`, Math.floor(Math.random() * 360)))} />
               <input ref={fileRef} type="file" accept="video/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ""; }} />
+              )}
               <span className="ml-auto font-mono text-[9px] text-muted-foreground">1-9 PVW · ⇧1-9 PGM · ESPAÇO CUT · ENTER AUTO · B FTB</span>
             </div>
             <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2 overflow-auto p-2">
@@ -452,9 +484,9 @@ export function Studio() {
               })}
             </div>
           </div>
-
-          {/* DSK */}
-          <div className="flex min-h-0 flex-col gap-1.5 overflow-auto rounded-sm border border-border bg-panel p-2">
+        </DockPanel>
+        <DockPanel id="dsk" title="DSK · OVERLAYS" order={dockOrder.indexOf("dsk")} span={1} minHeight={260} dragging={draggingPanel === "dsk"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel} onMove={movePanel}>
+<div className="flex min-h-0 flex-col gap-1.5 overflow-auto rounded-sm border border-border bg-panel p-2">
             <div className="font-mono text-[10px] tracking-widest text-muted-foreground">DSK · OVERLAYS</div>
             <DskRow n={1} label="Lower Third" on={dsk.lowerThird.on} onToggle={() => setDsk((d) => ({ ...d, lowerThird: { ...d.lowerThird, ...lt, on: !d.lowerThird.on } }))}>
               <input className="field" value={lt.name} onChange={(e) => setLt({ ...lt, name: e.target.value })} placeholder="Nome" />
@@ -477,10 +509,9 @@ export function Studio() {
               <input className="field" value={dsk.logo.text} maxLength={4} onChange={(e) => setDsk((d) => ({ ...d, logo: { ...d.logo, text: e.target.value } }))} />
             </DskRow>
           </div>
-        </section>
-
-        {/* AUDIO MIXER */}
-        <section className="flex h-[270px] shrink-0 gap-2 rounded-sm border border-border bg-panel p-2">
+        </DockPanel>
+        <DockPanel id="mixer" title="MIXER DE ÁUDIO" order={dockOrder.indexOf("mixer")} span={2} minHeight={310} dragging={draggingPanel === "mixer"} onDragStart={startPanelDrag} onDragEnd={() => setDraggingPanel(null)} onDrop={dropPanel} onMove={movePanel}>
+<section className="flex h-[270px] shrink-0 gap-2 rounded-sm border border-border bg-panel p-2">
           <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
             {inputs.map((inp) => channels[inp.id] && (
               <Strip key={inp.id} name={inp.name} ch={channels[inp.id]!} level={levels[inp.id]} onAir={tallyOf(inp.id) === "pgm"}
@@ -495,6 +526,8 @@ export function Studio() {
             ))}
           </div>
         </section>
+        </DockPanel>
+        </div>
       </main>
 
       {/* STATUS BAR */}
@@ -522,6 +555,66 @@ export function Studio() {
         <span className="text-foreground">TC {smpte(now ? now % 86_400_000 - new Date().getTimezoneOffset() * 60000 : 0)}</span>
       </footer>
     </div>
+  );
+}
+
+const DOCK_IDS = ["preview", "transitions", "program", "inputs", "dsk", "mixer"] as const;
+type DockId = (typeof DOCK_IDS)[number];
+const DOCK_STORAGE_KEY = "wmix:studio-dock-layout:v1";
+function isDockId(id: string): id is DockId {
+  return DOCK_IDS.some((value) => value === id);
+}
+function readDockOrder(): DockId[] {
+  if (typeof window === "undefined") return [...DOCK_IDS];
+  try {
+    const stored: unknown = JSON.parse(window.localStorage.getItem(DOCK_STORAGE_KEY) ?? "null");
+    if (Array.isArray(stored) && stored.length === DOCK_IDS.length &&
+      stored.every((id) => typeof id === "string" && isDockId(id)) &&
+      new Set(stored).size === DOCK_IDS.length) return stored as DockId[];
+  } catch { /* Invalid or inaccessible storage: use default layout. */ }
+  return [...DOCK_IDS];
+}
+function moveDockPanel(current: DockId[], source: DockId, target: DockId): DockId[] {
+  if (source === target || !current.includes(source) || !current.includes(target)) return current;
+  const next = current.filter((id) => id !== source);
+  next.splice(next.indexOf(target), 0, source);
+  return next;
+}
+function DockPanel({
+  id, title, order, span, minHeight, dragging, onDragStart, onDragEnd, onDrop, onMove, children,
+}: {
+  id: DockId; title: string; order: number; span: number; minHeight: number; dragging: boolean;
+  onDragStart: (event: DragEvent<HTMLElement>, id: DockId) => void;
+  onDragEnd: () => void;
+  onDrop: (event: DragEvent<HTMLElement>, id: DockId) => void;
+  onMove: (id: DockId, delta: number) => void;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={cn("flex min-w-0 flex-col rounded-sm border border-border bg-panel", span === 2 && "lg:col-span-2", dragging && "opacity-50")}
+      style={{ order, minHeight }}
+      onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
+      onDrop={(event) => onDrop(event, id)}
+    >
+      <div className="flex h-7 shrink-0 items-center justify-between border-b border-border bg-panel-strong px-2">
+        <span
+          draggable
+          onDragStart={(event) => onDragStart(event, id)}
+          onDragEnd={onDragEnd}
+          className="flex flex-1 cursor-grab items-center gap-2 font-mono text-[10px] font-bold tracking-wider text-muted-foreground active:cursor-grabbing"
+          title="Arraste para encaixar este painel"
+          aria-label={`Arrastar painel ${title}`}
+        >
+          <span aria-hidden="true">⠿</span>{title}
+        </span>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => onMove(id, -1)} className="rounded-sm px-1 text-xs text-muted-foreground hover:bg-accent" title="Mover painel para trás" aria-label={`Mover ${title} para trás`}>←</button>
+          <button type="button" onClick={() => onMove(id, 1)} className="rounded-sm px-1 text-xs text-muted-foreground hover:bg-accent" title="Mover painel para frente" aria-label={`Mover ${title} para frente`}>→</button>
+        </div>
+      </div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col p-1">{children}</div>
+    </section>
   );
 }
 
