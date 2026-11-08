@@ -1,0 +1,42 @@
+name: WMix Phase 1 - Windows validation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'desktop/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/phase1-validation.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'desktop/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/phase1-validation.yml'
+  workflow_dispatch:
+
+jobs:
+  web-and-desktop-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Frontend tests
+        run: npm test -- --run
+      - name: TypeScript and frontend build
+        run: npm run build
+      - name: Electron host syntax
+        run: node --check desktop/main.cjs
+      - name: Electron preload syntax
+        run: node --check desktop/preload.cjs
+      - name: RTMPS engine unit tests
+        run: node --test desktop/engine/rtmps-engine.test.mjs
+# This job cannot validate native libobs without a matching OBS SDK/runtime,
+# a compatible GPU, actual sources, and an end-to-end Windows production test.
