@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
                           << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
                 if (!ok) {
                   // Keep the control loop alive so STATUS and QUIT still work.
-                  std::cerr << "WMix: CUT nao confirmado pelo libobs. Estado anterior preservado.\\n";
+                  std::cerr << "WMix: CUT nao confirmado pelo libobs. Estado anterior preservado.\n";
                 }
               } else if (!command.empty()) {
                 std::cout << "ERROR UNKNOWN_COMMAND" << std::endl;
