@@ -108,3 +108,17 @@ describe("native Preview scene membership", () => {
     });
   });
 });
+
+describe("native output tally", () => {
+  it("parses the actual Program/Preview output routing", () => {
+    expect(parseNativeControlResponse("TALLY_STATUS PROGRAM")).toEqual({
+      type: "tally-status", scene: "PROGRAM",
+    });
+    expect(parseNativeControlResponse("TALLY_STATUS PREVIEW")).toEqual({
+      type: "tally-status", scene: "PREVIEW",
+    });
+    expect(parseNativeControlResponse("TALLY_STATUS UNKNOWN")).toEqual({
+      type: "tally-status", scene: "UNKNOWN",
+    });
+  });
+});
