@@ -130,6 +130,11 @@ int main(int argc, char** argv) {
                             << " " << current.fps_num << "/" << current.fps_den
                             << std::endl;
                 }
+              } else if (command == "PREVIEW_SOURCE_STATUS") {
+                // Check scene membership, not just source registration.
+                const bool attached = obs_scene_find_source(preview, "WMix Test Color") != nullptr;
+                std::cout << "PREVIEW_SOURCE_STATUS " << (attached ? "PRESENT" : "ABSENT")
+                          << " WMix Test Color" << std::endl;
               } else if (command == "PROGRAM_SOURCE_STATUS") {
                 // Inspect the actual scene connected to output channel 0.
                 // This verifies scene routing, not decoded/rendered video frames.
