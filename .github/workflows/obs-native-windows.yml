@@ -1,0 +1,139 @@
+name: WMix Native OBS - Windows experimental build
+
+on:
+  push:
+    branches: [agent/4-libobs-native]
+    paths:
+      - 'engine/obs/**'
+      - 'desktop/main.cjs'
+      - '.github/workflows/obs-native-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-libobs-windows:
+    runs-on: windows-2025
+    timeout-minutes: 90
+    steps:
+      - name: Checkout WMix
+        uses: actions/checkout@v4
+
+      - name: Check Visual Studio and CMake
+        shell: pwsh
+        run: |
+          cmake --version
+          & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationVersion
+          git --version
+
+      - name: Obtain pinned official OBS Studio source
+        shell: pwsh
+        run: |
+          git clone --depth 1 --branch 31.1.2 --recursive --shallow-submodules https://github.com/obsproject/obs-studio.git obs-upstream
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to fetch official OBS 31.1.2 source' }
+
+      - name: Attach native WMix target to official OBS source build
+        shell: pwsh
+        run: |
+          $wmixEngine = (Resolve-Path 'engine/obs').Path.Replace('\', '/')
+          Add-Content -Path 'obs-upstream/CMakeLists.txt' -Encoding utf8 -Value "add_subdirectory(`"$wmixEngine`" `"${CMAKE_BINARY_DIR}/wmix-native`")"
+          Write-Host "Added native target from: $wmixEngine"
+
+      - name: Configure libobs and WMix native engine
+        shell: pwsh
+        working-directory: obs-upstream
+        run: |
+          cmake --preset windows-x64 -DENABLE_UI=OFF -DENABLE_BROWSER=OFF -DENABLE_SCRIPTING=OFF -DENABLE_VLC=OFF -DENABLE_AJA=OFF
+          if ($LASTEXITCODE -ne 0) { throw 'OBS CMake configure failed: inspect toolchain/dependency logs' }
+
+      - name: Compile actual libobs, D3D11, test source plugin and WMix bridge
+        shell: pwsh
+        working-directory: obs-upstream
+        run: |
+          cmake --build build_x64 --config RelWithDebInfo --target wmix-obs-smoke libobs-d3d11 obs-filters --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw 'libobs native compilation failed' }
+
+      - name: Stage official OBS runtime files with WMix native executable
+        shell: pwsh
+        run: |
+          $runtime = 'obs-upstream/build_x64/rundir/RelWithDebInfo'
+          if (!(Test-Path $runtime)) { throw 'OBS native runtime directory not generated' }
+          $bin = Join-Path $runtime 'bin/64bit'
+          $obsDll = Join-Path $bin 'obs.dll'
+          $graphicsDll = Join-Path $bin 'libobs-d3d11.dll'
+          $wmix = 'obs-upstream/build_x64/wmix-native/RelWithDebInfo/wmix-obs-smoke.exe'
+          if (!(Test-Path $wmix)) { throw "Native WMix executable missing at $wmix" }
+          if (!(Test-Path $obsDll)) { throw "Actual OBS shared library missing at $obsDll" }
+          if (!(Test-Path $graphicsDll)) { throw 'OBS D3D11 renderer DLL missing' }
+          $plugin = Join-Path $runtime 'obs-plugins/64bit/obs-filters.dll'
+          if (!(Test-Path $plugin)) { throw 'OBS filters plugin DLL missing' }
+          Copy-Item $wmix (Join-Path $bin 'wmix-obs-smoke.exe') -Force
+          $stage = Join-Path $env:RUNNER_TEMP 'WMix-OBS-Native-Windows'
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item (Join-Path $runtime '*') -Destination $stage -Recurse -Force
+          $licensePath = 'obs-upstream/COPYING'
+          if (Test-Path $licensePath) { Copy-Item $licensePath (Join-Path $stage 'OBS-COPYING.txt') }
+          Write-Host 'Native OBS runtime assembled; no claims about physical cameras or GPU here.'
+
+      - name: Test native libobs startup without GPU initialization
+        shell: pwsh
+        run: |
+          $native = Join-Path $env:RUNNER_TEMP 'WMix-OBS-Native-Windows/bin/64bit/wmix-obs-smoke.exe'
+          Push-Location (Split-Path $native)
+          try {
+            & $native
+            if ($LASTEXITCODE -ne 0) { throw "Native libobs startup returned exit $LASTEXITCODE" }
+          } finally { Pop-Location }
+
+      - name: Probe OBS scene control protocol (may need GPU)
+        id: gpu-probe
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $native = Join-Path $env:RUNNER_TEMP 'WMix-OBS-Native-Windows/bin/64bit/wmix-obs-smoke.exe'
+          $inputPath = Join-Path $env:RUNNER_TEMP 'wmix-control-input.txt'
+          @('STATUS', 'VIDEO_STATUS', 'QUIT') | Set-Content -Path $inputPath -Encoding ascii
+          $stdout = Join-Path $env:RUNNER_TEMP 'wmix-obs-stdout.txt'
+          $stderr = Join-Path $env:RUNNER_TEMP 'wmix-obs-stderr.txt'
+          Push-Location (Split-Path $native)
+          try {
+            $p = Start-Process -FilePath $native -ArgumentList '--control' -RedirectStandardInput $inputPath -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
+            if (Test-Path $stdout) { Get-Content $stdout }
+            if (Test-Path $stderr) { Get-Content $stderr }
+            if ($p.ExitCode -ne 0) { throw "GPU-dependent OBS control probe failed: exit $($p.ExitCode)" }
+            $output = Get-Content $stdout -Raw
+            if ($output -notmatch 'READY WMIX_OBS_CONTROL_V1' -or $output -notmatch 'STATUS PROGRAM' -or $output -notmatch 'VIDEO_STATUS 1280x720 30/1') {
+              throw 'Native OBS protocol response missing'
+            }
+          } finally { Pop-Location }
+
+      - name: Report GPU probe limitations
+        if: always()
+        shell: pwsh
+        run: |
+          if ('${{ steps.gpu-probe.outcome }}' -ne 'success') {
+            Write-Warning 'GPU-dependent control probe did not pass. This is not proof that the WMix OBS engine works end-to-end.'
+          }
+          "### WMix native libobs build" >> $env:GITHUB_STEP_SUMMARY
+          "- OBS version: 31.1.2 (pinned official source)" >> $env:GITHUB_STEP_SUMMARY
+          "- Native engine: wmix-obs-smoke.exe" >> $env:GITHUB_STEP_SUMMARY
+          "- GPU-dependent protocol probe: ${{ steps.gpu-probe.outcome }}" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Publish native OBS probe logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WMix-OBS-Native-Probe-Logs
+          path: |
+            ${{ runner.temp }}/wmix-obs-stdout.txt
+            ${{ runner.temp }}/wmix-obs-stderr.txt
+          if-no-files-found: ignore
+
+      - name: Publish native OBS Windows runtime (not installer)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WMix-OBS-Native-Windows-x64-experimental
+          path: ${{ runner.temp }}/WMix-OBS-Native-Windows
+          if-no-files-found: error
+          retention-days: 7
