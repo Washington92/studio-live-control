@@ -120,6 +120,20 @@ app.whenReady().then(() => {
       contextIsolation: true, nodeIntegration: false, sandbox: true,
     },
   });
+  // A packaged app must surface renderer failures instead of silently showing
+  // a blank window. Keep the diagnostic local; no telemetry is transmitted.
+  window.webContents.on('did-fail-load', (_event, code, description, validatedURL, isMainFrame) => {
+    if (!isMainFrame) return;
+    console.error('[WMix Desktop] Renderer load failed:', code, description, validatedURL);
+    const { dialog } = require('electron');
+    dialog.showErrorBox('WMix — Falha ao abrir a interface',
+      'Não foi possível carregar a interface local do WMix.\\n' +
+      'Verifique se o pacote ZIP foi extraído por completo.\\n\\n' +
+      'Código: ' + code + ' — ' + description);
+  });
+  window.webContents.on('render-process-gone', (_event, details) => {
+    console.error('[WMix Desktop] Renderer process exited:', details.reason);
+  });
   const url = process.env.WMIX_DEV_URL;
   if (url) {
     const parsed = new URL(url);
