@@ -19,7 +19,7 @@ export function Meter({ level, className }: { level?: Level | undefined; classNa
 function Btn({ on, onClick, children, tone }: { on: boolean; onClick: () => void; children: React.ReactNode; tone: "mute" | "solo" | "afv" | "bus" }) {
   const toneCls = { mute: "bg-pgm text-pgm-foreground", solo: "bg-warn text-warn-foreground", afv: "bg-pvw text-pvw-foreground", bus: "bg-primary text-primary-foreground" }[tone];
   return (
-    <button onClick={onClick} className={cn("h-6 w-full rounded-md border border-border/70 font-sans text-[10px] font-semibold tracking-wide transition-colors", on ? toneCls : "bg-secondary text-muted-foreground hover:text-foreground")}>
+    <button type="button" aria-pressed={on} onClick={onClick} className={cn("h-6 w-full rounded-md border border-border/70 font-sans text-[10px] font-semibold tracking-wide transition-colors", on ? toneCls : "bg-secondary text-muted-foreground hover:text-foreground")}>
       {children}
     </button>
   );
@@ -40,7 +40,7 @@ export function Strip({ name, ch, level, onAir, onChange, isBus }: {
             type="range" min={0} max={1000} value={Math.round(ch.fader * 1000)}
             onChange={(e) => onChange({ fader: Number(e.target.value) / 1000 })}
             onDoubleClick={() => onChange({ fader: 0.75 })}
-            className="fader" aria-label={`Fader ${name}`}
+            className="fader" aria-label={`Fader ${name}`} aria-valuetext={`${formatDb(db)} decibéis`}
           />
         </div>
       </div>
