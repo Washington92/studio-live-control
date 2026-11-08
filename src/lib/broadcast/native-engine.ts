@@ -42,12 +42,14 @@ export type NativeControlResponse =
   | { type: "status"; scene: "PROGRAM" | "PREVIEW" }
   | { type: "cut"; ok: boolean; scene: "PROGRAM" | "PREVIEW" }
   | { type: "error"; message: string }
+  | { type: "source"; name: string }
   | { type: "bye" };
 
 export function parseNativeControlResponse(line: string): NativeControlResponse {
   const message = line.trim();
   if (message === "READY WMIX_OBS_CONTROL_V1") return { type: "ready", version: "WMIX_OBS_CONTROL_V1" };
   if (message === "BYE") return { type: "bye" };
+  if (message.startsWith("OK SOURCE ")) return { type: "source", name: message.slice(10) };
   const status = /^STATUS (PROGRAM|PREVIEW)$/.exec(message);
   if (status) return { type: "status", scene: status[1] as "PROGRAM" | "PREVIEW" };
   const cut = /^(OK|ERROR) CUT (PROGRAM|PREVIEW)$/.exec(message);
