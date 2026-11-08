@@ -7,10 +7,11 @@ export interface Level { rms: number; peak: number }
 export function Meter({ level, className }: { level?: Level | undefined; className?: string }) {
   const rms = dbToMeter(gainToDb(level?.rms ?? 0));
   const peak = dbToMeter(gainToDb(level?.peak ?? 0));
+  const clipping = (level?.peak ?? 0) >= 1;
   return (
-    <div className={cn("relative w-2 overflow-hidden rounded-sm bg-meter-bg", className)}>
+    <div role="meter" aria-label="Nível de áudio" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(rms * 100)} aria-valuetext={clipping ? "Clipping detectado" : `${Math.round(rms * 100)} por cento`} className={cn("relative w-2 overflow-hidden rounded-sm bg-meter-bg", clipping && "ring-1 ring-pgm", className)}>
       <div className="absolute inset-x-0 bottom-0 bg-meter" style={{ height: `${rms * 100}%`, backgroundSize: "100% var(--meter-h, 160px)" }} />
-      <div className="absolute inset-x-0 h-[2px] bg-foreground" style={{ bottom: `${peak * 100}%` }} />
+      <div className={cn("absolute inset-x-0 h-[2px]", clipping ? "bg-pgm" : "bg-foreground")} style={{ bottom: `${peak * 100}%` }} />
       <div className="absolute inset-x-0 h-px bg-pgm/70" style={{ bottom: `${dbToMeter(0) * 100}%` }} />
     </div>
   );
