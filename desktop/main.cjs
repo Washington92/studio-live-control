@@ -128,7 +128,15 @@ app.whenReady().then(() => {
     }
     window.loadURL(url);
   } else {
-    window.loadURL('data:text/html,<h2>WMix Desktop</h2><p>Set WMIX_DEV_URL to your local Vite server.</p>');
+    // Packaged desktop builds load the offline renderer from disk, without
+    // depending on the Lovable preview or a running development server.
+    const fs = require('node:fs');
+    const renderer = path.join(__dirname, 'dist-renderer', 'index.html');
+    if (fs.existsSync(renderer)) {
+      window.loadFile(renderer);
+    } else {
+      window.loadURL('data:text/html,<h2>WMix Desktop</h2><p>Renderer missing. Run the desktop renderer build.</p>');
+    }
   }
   startEngine();
 });
