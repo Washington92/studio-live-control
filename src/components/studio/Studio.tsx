@@ -477,6 +477,14 @@ export function Studio() {
         <span role="status" aria-live="polite" title="Estado do motor nativo; o compositor web continua independente" className="rounded-md border border-border bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
           {nativeStatus === "ready" ? "OBS: CONECTADO" : nativeStatus === "offline" ? "OBS: OFFLINE" : "MOTOR: WEB"}
         </span>
+        {nativeStatus === "offline" && nativeEngine()?.restart && (
+          <button type="button" className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent" title="Tentar reiniciar o processo nativo" onClick={async () => {
+            try {
+              const result = await nativeEngine()?.restart?.();
+              if (!result?.restarted) console.warn("WMix engine restart:", result?.reason);
+            } catch (error) { console.error("WMix engine restart failed:", error); }
+          }}>REINICIAR OBS</button>
+        )}
         <Timer label="REC" since={rec} now={now} tone="pgm" />
         <Timer label="LIVE" since={live} now={now} tone="pgm" />
         <button onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
