@@ -89,3 +89,19 @@ Para homologar: compilar no Windows, confirmar plugins OBS, executar `ADD_TEST_S
 ## Consulta de fonte nativa
 
 `SOURCE_STATUS` retorna `SOURCE_STATUS PRESENT WMix Test Color` ou `SOURCE_STATUS ABSENT WMix Test Color`, consultando diretamente o registro de fontes do libobs. O botão de diagnóstico `TESTAR FONTE OBS` agora executa `ADD_TEST_SOURCE` seguido de `SOURCE_STATUS`, mostrando as duas respostas. Isso comprova apenas presença lógica da fonte, **não** captura, renderização, exibição no Preview ou Tally do Program. Requer compilação e teste Windows para validação.
+
+## Diagnóstico do Program
+
+`PROGRAM_SOURCE_STATUS` consulta a fonte ligada ao canal 0 do libobs, identifica se corresponde a uma das cenas controladas e verifica se `WMix Test Color` está inserida nessa cena. Retorna `PROGRAM_SOURCE_STATUS PRESENT WMix Test Color` ou `PROGRAM_SOURCE_STATUS ABSENT WMix Test Color`.
+
+Sequência de teste manual no modo `--control`:
+
+```text
+ADD_TEST_SOURCE
+SOURCE_STATUS
+PROGRAM_SOURCE_STATUS
+CUT
+PROGRAM_SOURCE_STATUS
+```
+
+O resultado esperado é fonte presente no registro, ausente inicialmente no Program e presente depois do CUT, **desde que o plugin `color_source` e o runtime OBS funcionem**. Isso valida roteamento lógico, não transporte de quadros ou Tally visual. A execução Windows ainda não foi comprovada.
