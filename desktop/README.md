@@ -47,3 +47,19 @@ node --test desktop/engine/rtmps-engine.test.mjs
 Esta verificação cobre parâmetros e validação, **não** prova transmissão.
 O teste ponta a ponta exigirá empacotar FFmpeg e receber o WebM do Program.
 Não use uma chave real em logs, commits ou capturas de tela.
+
+## Electron host experimental (libobs)
+
+Adicionado `desktop/main.cjs` e `desktop/preload.cjs` como caminho **alternativo e experimental** ao motor RTMPS já documentado acima. Não substitui o pipeline RTMPS existente.
+
+1. Compile `engine/obs` com `WMIX_WITH_LIBOBS=ON` e disponibilize as DLLs do OBS.
+2. Execute `npm install` e `npm run dev`.
+3. Em outro PowerShell, configure:
+
+```powershell
+$env:WMIX_DEV_URL="http://localhost:3000" # ajustar à porta exibida pelo Vite
+$env:WMIX_ENGINE_BINARY="C:\caminho\wmix-obs-smoke.exe"
+npm run desktop
+```
+
+A janela carrega a interface web local. O preload isolado disponibiliza `window.wmixNative.status()`, `window.wmixNative.command('STATUS')`, `window.wmixNative.command('CUT')` e `window.wmixNative.onEvent(callback)`. **Os botões da UI ainda não chamam essas funções**. Não há instalador, Preview/Program nativo visível ou teste validado em Windows. O host só aceita endereço de desenvolvimento local.
