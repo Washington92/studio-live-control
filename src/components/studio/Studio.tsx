@@ -486,7 +486,8 @@ export function Studio() {
             setNativeBusy(true);
             try {
               const response = await bridge.command("ADD_TEST_SOURCE");
-              setNativeDiagnostic(response);
+              const sourceState = await bridge.command("SOURCE_STATUS");
+              setNativeDiagnostic(`${response} · ${sourceState}`);
             } catch (error) {
               setNativeDiagnostic(error instanceof Error ? error.message : "Falha na fonte de teste");
             } finally {
