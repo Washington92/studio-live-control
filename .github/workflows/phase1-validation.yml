@@ -221,11 +221,23 @@ jobs:
           if ($registeredAfter) { throw 'WMix still registered in installed apps after uninstall' }
           if (Test-Path $startMenu) { throw 'WMix Start Menu shortcut remained after uninstall' }
           Write-Host 'WMix application, installed-app registration and shortcuts removed successfully'
+      - name: Generate installer integrity manifest (SHA-256)
+        shell: pwsh
+        run: |
+          $setup = Join-Path $env:GITHUB_WORKSPACE 'WMix-Setup-Windows-x64.exe'
+          if (!(Test-Path $setup)) { throw 'WMix installer missing before integrity manifest' }
+          $hash = (Get-FileHash -Path $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash *WMix-Setup-Windows-x64.exe" | Set-Content -Path 'WMix-Setup-Windows-x64.sha256' -Encoding ascii
+          Write-Host "WMix-Setup-Windows-x64.exe SHA256: $hash"
+          $recorded = (Get-Content 'WMix-Setup-Windows-x64.sha256' -Raw).Split(' ')[0].Trim()
+          if ($recorded -ne $hash) { throw 'SHA-256 manifest validation failed' }
       - name: Upload WMix Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: WMix-Setup-Windows-x64
-          path: WMix-Setup-Windows-x64.exe
+          path: |
+            WMix-Setup-Windows-x64.exe
+            WMix-Setup-Windows-x64.sha256
           if-no-files-found: error
           retention-days: 30
 # This job cannot validate native libobs without a matching OBS SDK/runtime,
