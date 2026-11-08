@@ -46,3 +46,19 @@ describe("native control protocol", () => {
     expect(parseNativeControlResponse("garbage").type).toBe("error");
   });
 });
+
+describe("native desktop contract", () => {
+  it("allows a source test without modifying browser state", async () => {
+    const command = vi.fn().mockResolvedValue("OK SOURCE WMix Test Color");
+    window.wmixNative = {
+      status: vi.fn().mockResolvedValue({ ready: true }),
+      command,
+      onEvent: vi.fn(() => () => {}),
+      restart: vi.fn().mockResolvedValue({ restarted: true }),
+    };
+    expect(await nativeEngine()?.command("ADD_TEST_SOURCE")).toBe("OK SOURCE WMix Test Color");
+    expect(command).toHaveBeenCalledOnce();
+    expect(command).toHaveBeenCalledWith("ADD_TEST_SOURCE");
+    expect(await nativeEngine()?.restart?.()).toEqual({ restarted: true });
+  });
+});
