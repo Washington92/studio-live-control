@@ -24,6 +24,13 @@ RequestExecutionLevel admin
 Unicode true
 SetCompressor /SOLID lzma
 BrandingText "WMix Studio"
+CRCCheck force
+VIProductVersion "0.1.0.0"
+VIAddVersionKey /LANG=1046 "ProductName" "WMix Studio"
+VIAddVersionKey /LANG=1046 "FileDescription" "Instalador do WMix Studio para Windows"
+VIAddVersionKey /LANG=1046 "CompanyName" "WMix"
+VIAddVersionKey /LANG=1046 "FileVersion" "0.1.0"
+VIAddVersionKey /LANG=1046 "ProductVersion" "0.1.0"
 Icon "${WMIX_ICON}"
 UninstallIcon "${WMIX_ICON}"
 
@@ -42,6 +49,13 @@ UninstallIcon "${WMIX_ICON}"
 
 !insertmacro MUI_LANGUAGE "PortugueseBR"
 !insertmacro MUI_LANGUAGE "English"
+
+Function .onInit
+  ${IfNot} ${RunningX64}
+    MessageBox MB_OK|MB_ICONSTOP "Este instalador do WMix requer Windows de 64 bits." /SD IDOK
+    Abort
+  ${EndIf}
+FunctionEnd
 
 Section "WMix Studio (obrigatorio)" SecMain
   SectionIn RO
