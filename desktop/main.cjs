@@ -83,6 +83,7 @@ function startEngine() {
     ready = false;
     failAll(err.message);
     notify({ type: 'offline', reason: err.message });
+    if (engine === processRef) engine = null;
   });
   engine.on('exit', (code) => {
     clearTimeout(startupTimer);
