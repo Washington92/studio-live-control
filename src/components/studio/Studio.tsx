@@ -143,6 +143,12 @@ export function Studio() {
     try { window.localStorage.setItem(DOCK_SIZES_KEY, JSON.stringify(dockSizes)); }
     catch { /* Disabled storage: keep sizes in memory. */ }
   }, [dockSizes]);
+  const resetDockLayout = () => {
+    // Recover from oversized or stale persisted dock geometry without
+    // touching input groups, sources, mixer settings or other studio state.
+    setDockOrder([...DOCK_IDS]);
+    setDockSizes(Object.fromEntries(DOCK_IDS.map((id) => [id, { ...DEFAULT_DOCK_SIZES[id] }])) as DockSizes);
+  };
   const resizeDock = (id: DockId, size: DockSize) => {
     setDockSizes((current) => ({ ...current, [id]: size }));
   };
@@ -474,6 +480,7 @@ export function Studio() {
       <header className="wmix-chrome flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-panel-strong px-3 py-2 sm:flex-nowrap">
         <div className="flex items-center gap-2">
           <img src="/wmix-logo.svg" alt="wMix" className="h-8 w-auto max-w-[125px] object-contain" />
+          <button type="button" onClick={resetDockLayout} className="wmix-control rounded border border-border px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground" title="Restaurar tamanho e ordem padrão dos painéis, sem apagar fontes ou configurações" aria-label="Restaurar layout dos painéis">RESTAURAR LAYOUT</button>
         </div>
 
         <div className="hidden flex-1 sm:block" />
