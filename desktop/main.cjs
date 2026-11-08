@@ -152,6 +152,7 @@ app.whenReady().then(() => {
   });
   window = new BrowserWindow({
     width: 1440, height: 900,
+    icon: path.join(__dirname, 'assets', 'wmix-icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true, nodeIntegration: false, sandbox: true,
