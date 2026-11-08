@@ -101,6 +101,8 @@ export function Studio() {
   const [tele, setTele] = useState({ fps: 0, render: 0, mem: 0, load: 0, dropped: 0 });
   const [now, setNow] = useState(0);
   const [nativeStatus, setNativeStatus] = useState<"web" | "offline" | "ready">("web");
+  const [nativeDiagnostic, setNativeDiagnostic] = useState("");
+  const [nativeBusy, setNativeBusy] = useState(false);
   useEffect(() => {
     const bridge = nativeEngine();
     if (!bridge) return;
@@ -477,6 +479,22 @@ export function Studio() {
         <span role="status" aria-live="polite" title="Estado do motor nativo; o compositor web continua independente" className="rounded-md border border-border bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
           {nativeStatus === "ready" ? "OBS: CONECTADO" : nativeStatus === "offline" ? "OBS: OFFLINE" : "MOTOR: WEB"}
         </span>
+        {nativeStatus === "ready" && (
+          <button type="button" disabled={nativeBusy} className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent disabled:opacity-50" title="Criar fonte de teste somente no motor nativo; não altera as entradas web" onClick={async () => {
+            const bridge = nativeEngine();
+            if (!bridge) return;
+            setNativeBusy(true);
+            try {
+              const response = await bridge.command("ADD_TEST_SOURCE");
+              setNativeDiagnostic(response);
+            } catch (error) {
+              setNativeDiagnostic(error instanceof Error ? error.message : "Falha na fonte de teste");
+            } finally {
+              setNativeBusy(false);
+            }
+          }}>TESTAR FONTE OBS</button>
+        )}
+        {nativeDiagnostic && <span role="status" className="max-w-[210px] truncate text-[10px] text-muted-foreground" title={nativeDiagnostic}>{nativeDiagnostic}</span>}
         {nativeStatus === "offline" && nativeEngine()?.restart && (
           <button type="button" className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent" title="Tentar reiniciar o processo nativo" onClick={async () => {
             try {
