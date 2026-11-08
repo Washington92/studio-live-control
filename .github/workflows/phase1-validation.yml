@@ -105,8 +105,8 @@ jobs:
           Copy-Item desktop/preload.cjs $appDir
           New-Item -ItemType Directory -Force -Path (Join-Path $appDir 'assets') | Out-Null
           Copy-Item desktop/assets/wmix-icon.png (Join-Path $appDir 'assets/wmix-icon.png')
-          Copy-Item desktop/assets/wmix-icon.png (Join-Path $appDir 'dist-renderer/assets/wmix-icon.png')
           Copy-Item desktop/dist-renderer $appDir -Recurse
+          Copy-Item desktop/assets/wmix-icon.png (Join-Path $appDir 'dist-renderer/assets/wmix-icon.png')
           Set-Content -Path (Join-Path $appDir 'package.json') -Encoding utf8 -Value '{"name":"wmix-desktop","version":"0.1.0","private":true,"main":"main.cjs"}'
           if (!(Test-Path (Join-Path $appDir 'dist-renderer/index.html'))) { throw 'Offline renderer missing' }
           if (!(Test-Path (Join-Path $appDir 'preload.cjs'))) { throw 'Electron preload missing' }
