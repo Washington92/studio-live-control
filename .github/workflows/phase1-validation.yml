@@ -200,6 +200,15 @@ jobs:
           if (!(Test-Path (Join-Path $installDir 'Uninstall.exe'))) { throw 'Windows uninstaller missing' }
           if (!(Test-Path (Join-Path $installDir 'resources/app/dist-renderer/index.html'))) { throw 'Installed WMix renderer missing' }
           Write-Host 'WMix setup installed the application and uninstaller successfully'
+          $env:WMIX_SMOKE_TEST = '1'
+          $env:WMIX_ENGINE_BINARY = ''
+          $appCheck = Start-Process -FilePath $installedExe -PassThru
+          if (!$appCheck.WaitForExit(60000)) {
+            Stop-Process -Id $appCheck.Id -Force -ErrorAction SilentlyContinue
+            throw 'Installed WMix.exe did not complete smoke check within 60 seconds'
+          }
+          if ($appCheck.ExitCode -ne 0) { throw "Installed WMix.exe failed its smoke check: $($appCheck.ExitCode)" }
+          Write-Host 'Installed WMix application opened its React studio successfully'
           $uninstall = Start-Process -FilePath (Join-Path $installDir 'Uninstall.exe') -ArgumentList '/S' -PassThru -Wait
           if ($uninstall.ExitCode -ne 0) { throw "WMix silent uninstall failed: $($uninstall.ExitCode)" }
           if (Test-Path $installedExe) { throw 'WMix.exe remained after uninstall' }
