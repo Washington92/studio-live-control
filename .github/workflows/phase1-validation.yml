@@ -90,11 +90,11 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw 'Electron binary download failed' }
           }
           if (!(Test-Path $electronExe)) { throw 'Electron Windows executable was not installed' }
-      - name: Package portable WMix Electron for Windows
+      - name: Stage WMix Electron desktop for Windows installer
         shell: pwsh
         run: |
           $source = 'node_modules/electron/dist'
-          $destination = Join-Path $env:RUNNER_TEMP 'WMix-Desktop-Portable'
+          $destination = Join-Path $env:RUNNER_TEMP 'WMix-Desktop-Staging'
           if (!(Test-Path (Join-Path $source 'electron.exe'))) { throw 'Electron Windows executable missing' }
           New-Item -ItemType Directory -Force -Path $destination | Out-Null
           Copy-Item (Join-Path $source '*') $destination -Recurse -Force
@@ -135,11 +135,10 @@ jobs:
             Pop-Location
           }
           if (!(Test-Path (Join-Path $appDir 'assets/wmix-icon.png'))) { throw 'WMix brand icon missing from package' }
-          Compress-Archive -Path (Join-Path $destination '*') -DestinationPath 'WMix-Desktop-Portable-Windows-x64.zip' -Force
       - name: Smoke-test actual Windows Electron renderer
         shell: pwsh
         run: |
-          $exe = Join-Path $env:RUNNER_TEMP 'WMix-Desktop-Portable/WMix.exe'
+          $exe = Join-Path $env:RUNNER_TEMP 'WMix-Desktop-Staging/WMix.exe'
           if (!(Test-Path $exe)) { throw 'Packaged WMix.exe not found' }
           $env:WMIX_SMOKE_TEST = '1'
           $env:WMIX_ENGINE_BINARY = ''
@@ -173,11 +172,43 @@ jobs:
           path: ${{ runner.temp }}/wmix-desktop-smoke.png
           if-no-files-found: ignore
           retention-days: 30
-      - name: Upload portable WMix desktop build
+      - name: Build WMix Studio Windows installer (NSIS)
+        shell: pwsh
+        run: |
+          choco install nsis --yes --no-progress --limit-output
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS installer tool installation failed' }
+          $makensis = Join-Path ${env:ProgramFiles(x86)} 'NSIS/makensis.exe'
+          if (!(Test-Path $makensis)) { throw 'NSIS compiler makensis.exe missing' }
+          $payload = Join-Path $env:RUNNER_TEMP 'WMix-Desktop-Staging'
+          $icon = Join-Path $env:RUNNER_TEMP 'wmix.ico'
+          $output = Join-Path $env:GITHUB_WORKSPACE 'WMix-Setup-Windows-x64.exe'
+          if (!(Test-Path (Join-Path $payload 'WMix.exe'))) { throw 'WMix application staging folder missing' }
+          if (!(Test-Path $icon)) { throw 'WMix installer icon missing' }
+          & $makensis "/DWMIX_PAYLOAD_DIR=$payload" "/DWMIX_ICON=$icon" "/DWMIX_OUTPUT=$output" 'desktop/installer/wmix.nsi'
+          if ($LASTEXITCODE -ne 0) { throw 'WMix NSIS installer compilation failed' }
+          if (!(Test-Path $output)) { throw 'WMix-Setup-Windows-x64.exe was not generated' }
+          Write-Host "Generated installer: $output"
+      - name: Verify WMix installation and uninstallation
+        shell: pwsh
+        run: |
+          $setup = Join-Path $env:GITHUB_WORKSPACE 'WMix-Setup-Windows-x64.exe'
+          $installDir = Join-Path $env:RUNNER_TEMP 'WMixInstalled'
+          $installedExe = Join-Path $installDir 'WMix.exe'
+          $installer = Start-Process -FilePath $setup -ArgumentList @('/S', "/D=$installDir") -PassThru -Wait
+          if ($installer.ExitCode -ne 0) { throw "WMix silent installation failed with exit code $($installer.ExitCode)" }
+          if (!(Test-Path $installedExe)) { throw 'WMix.exe was not installed' }
+          if (!(Test-Path (Join-Path $installDir 'Uninstall.exe'))) { throw 'Windows uninstaller missing' }
+          if (!(Test-Path (Join-Path $installDir 'resources/app/dist-renderer/index.html'))) { throw 'Installed WMix renderer missing' }
+          Write-Host 'WMix setup installed the application and uninstaller successfully'
+          $uninstall = Start-Process -FilePath (Join-Path $installDir 'Uninstall.exe') -ArgumentList '/S' -PassThru -Wait
+          if ($uninstall.ExitCode -ne 0) { throw "WMix silent uninstall failed: $($uninstall.ExitCode)" }
+          if (Test-Path $installedExe) { throw 'WMix.exe remained after uninstall' }
+          Write-Host 'WMix application uninstalled successfully'
+      - name: Upload WMix Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: WMix-Desktop-Portable-Windows-x64
-          path: WMix-Desktop-Portable-Windows-x64.zip
+          name: WMix-Setup-Windows-x64
+          path: WMix-Setup-Windows-x64.exe
           if-no-files-found: error
           retention-days: 30
 # This job cannot validate native libobs without a matching OBS SDK/runtime,
