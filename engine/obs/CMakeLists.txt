@@ -1,8 +1,7 @@
-# WMix native libobs proof of concept.
-# Supply an OBS Studio build/install with a libobs CMake package.
-find_package(libobs CONFIG QUIET)
-if(NOT libobs_FOUND)
-  message(FATAL_ERROR "libobs CMake package not found. Configure with -Dlibobs_DIR=<path-to-libobs-cmake-config> or disable WMIX_WITH_LIBOBS.")
+# WMix native libobs engine. Prefer linking directly inside the OBS Studio
+# source build; permit matching installed CMake exports for external builds.
+if(NOT TARGET OBS::libobs AND NOT TARGET libobs)
+  find_package(libobs CONFIG REQUIRED)
 endif()
 add_executable(wmix-obs-smoke src/obs_smoke.cpp)
 if(TARGET OBS::libobs)
@@ -10,7 +9,7 @@ if(TARGET OBS::libobs)
 elseif(TARGET libobs)
   target_link_libraries(wmix-obs-smoke PRIVATE libobs)
 else()
-  message(FATAL_ERROR "libobs found, but no supported CMake target exported; inspect installed OBS CMake exports.")
+  message(FATAL_ERROR "libobs target missing (OBS::libobs or libobs)")
 endif()
 
 add_test(NAME wmix_obs_startup COMMAND wmix-obs-smoke)
