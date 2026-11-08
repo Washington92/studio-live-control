@@ -3,9 +3,10 @@
 #include <string>
 
 int main(int argc, char** argv) {
-  const bool initialize_av = argc == 2 && std::string(argv[1]) == "--av";
+  const bool initialize_scene = argc == 2 && std::string(argv[1]) == "--scene";
+  const bool initialize_av = initialize_scene || (argc == 2 && std::string(argv[1]) == "--av");
   if (argc > 1 && !initialize_av) {
-    std::cerr << "Uso: wmix-obs-smoke [--av]\n";
+    std::cerr << "Uso: wmix-obs-smoke [--av | --scene]\n";
     return 2;
   }
 
@@ -44,6 +45,19 @@ int main(int argc, char** argv) {
         result = 1;
       } else {
         std::cout << "WMix: libobs video 1280x720@30 e audio 48kHz inicializados.\n";
+        if (initialize_scene) {
+          obs_scene_t* scene = obs_scene_create("WMix Program");
+          if (!scene) {
+            std::cerr << "WMix: falha ao criar cena Program.\\n";
+            result = 1;
+          } else {
+            obs_source_t* source = obs_scene_get_source(scene);
+            obs_set_output_source(0, source);
+            std::cout << "WMix: cena Program vinculada ao canal 0.\\n";
+            obs_set_output_source(0, nullptr);
+            obs_scene_release(scene);
+          }
+        }
       }
     }
   } else {
