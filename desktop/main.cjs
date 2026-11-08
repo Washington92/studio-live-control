@@ -148,7 +148,7 @@ app.whenReady().then(() => {
     window.webContents.once('did-finish-load', async () => {
       try {
         const mounted = await window.webContents.executeJavaScript(
-          "new Promise(resolve => { const deadline = Date.now() + 15000; const check = () => { const root = document.getElementById('root'); if (root && root.children.length > 0) resolve(true); else if (Date.now() > deadline) resolve(false); else setTimeout(check, 200); }; check(); })"
+          "new Promise(resolve => { const deadline = Date.now() + 15000; const check = () => { const ready = document.documentElement.dataset.wmixStudioReady === 'true'; const error = document.querySelector('[role=alert]'); if (error) resolve(false); else if (ready) resolve(true); else if (Date.now() > deadline) resolve(false); else setTimeout(check, 200); }; check(); })"
         );
         clearTimeout(timeout);
         console.log('[WMix Smoke] React mounted:', mounted);
