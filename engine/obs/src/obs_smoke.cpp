@@ -20,11 +20,6 @@ int main(int argc, char** argv) {
   }
 
   int result = 0;
-  if (initialize_sources || initialize_control) {
-    // OBS plugins must be loaded before creating plugin-provided sources.
-    obs_load_all_modules();
-    obs_log_loaded_modules();
-  }
   if (initialize_av) {
     obs_video_info video{};
     video.graphics_module = "libobs-d3d11.dll";
@@ -54,6 +49,12 @@ int main(int argc, char** argv) {
         result = 1;
       } else {
         std::cout << "WMix: libobs video 1280x720@30 e audio 48kHz inicializados.\n";
+        if (initialize_sources || initialize_control) {
+          // Initialize video/audio before loading plugins, as in OBS startup.
+          obs_load_all_modules();
+          obs_log_loaded_modules();
+          obs_post_load_modules();
+        }
         if (initialize_scene || initialize_dual || initialize_switch || initialize_control || initialize_sources) {
           obs_scene_t* program = obs_scene_create("WMix Program");
           obs_scene_t* preview = (initialize_dual || initialize_switch || initialize_control || initialize_sources) ? obs_scene_create("WMix Preview") : nullptr;
@@ -78,7 +79,7 @@ int main(int argc, char** argv) {
             // It proves source creation and scene attachment, not camera capture.
             obs_source_t* source = obs_source_create("color_source", "WMix Test Color", nullptr, nullptr);
             if (!source) {
-              std::cerr << "WMix: color_source unavailable (check OBS plugins).\\n";
+              std::cerr << "WMix: color_source unavailable (check OBS plugins).\n";
               result = 1;
             } else {
               obs_sceneitem_t* item = obs_scene_add(preview, source);
