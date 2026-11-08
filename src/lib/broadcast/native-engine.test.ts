@@ -73,3 +73,14 @@ describe("native source status", () => {
     });
   });
 });
+
+describe("native Program scene routing", () => {
+  it("distinguishes a source on air from a source only registered in OBS", () => {
+    expect(parseNativeControlResponse("PROGRAM_SOURCE_STATUS PRESENT WMix Test Color")).toEqual({
+      type: "program-source-status", present: true, name: "WMix Test Color",
+    });
+    expect(parseNativeControlResponse("PROGRAM_SOURCE_STATUS ABSENT WMix Test Color")).toEqual({
+      type: "program-source-status", present: false, name: "WMix Test Color",
+    });
+  });
+});
