@@ -4,10 +4,11 @@
 
 int main(int argc, char** argv) {
   const bool initialize_scene = argc == 2 && std::string(argv[1]) == "--scene";
+  const bool initialize_switch = argc == 2 && std::string(argv[1]) == "--switch";
   const bool initialize_dual = argc == 2 && std::string(argv[1]) == "--dual";
-  const bool initialize_av = initialize_scene || initialize_dual || (argc == 2 && std::string(argv[1]) == "--av");
+  const bool initialize_av = initialize_scene || initialize_dual || initialize_switch || (argc == 2 && std::string(argv[1]) == "--av");
   if (argc > 1 && !initialize_av) {
-    std::cerr << "Uso: wmix-obs-smoke [--av | --scene | --dual]\n";
+    std::cerr << "Uso: wmix-obs-smoke [--av | --scene | --dual | --switch]\n";
     return 2;
   }
 
@@ -46,10 +47,10 @@ int main(int argc, char** argv) {
         result = 1;
       } else {
         std::cout << "WMix: libobs video 1280x720@30 e audio 48kHz inicializados.\n";
-        if (initialize_scene || initialize_dual) {
+        if (initialize_scene || initialize_dual || initialize_switch) {
           obs_scene_t* program = obs_scene_create("WMix Program");
-          obs_scene_t* preview = initialize_dual ? obs_scene_create("WMix Preview") : nullptr;
-          if (!program || (initialize_dual && !preview)) {
+          obs_scene_t* preview = (initialize_dual || initialize_switch) ? obs_scene_create("WMix Preview") : nullptr;
+          if (!program || ((initialize_dual || initialize_switch) && !preview)) {
             std::cerr << "WMix: falha ao criar cenas.\n";
             result = 1;
           } else {
@@ -64,6 +65,19 @@ int main(int argc, char** argv) {
                 result = 1;
               }
             }
+          }
+          if (initialize_switch && program && preview && result == 0) {
+            // CUT: replace output source atomically, retaining both scene objects.
+            obs_source_t* preview_source = obs_scene_get_source(preview);
+            obs_set_output_source(0, preview_source);
+            obs_source_t* active = obs_get_output_source(0);
+            if (active != preview_source) {
+              std::cerr << "WMix: CUT nao atualizou a saida Program.\n";
+              result = 1;
+            } else {
+              std::cout << "WMix: CUT Preview -> Program concluido.\n";
+            }
+            if (active) obs_source_release(active);
           }
           obs_set_output_source(0, nullptr);
           if (preview) obs_scene_release(preview);
