@@ -64,7 +64,7 @@ function failAll(reason) {
 function startEngine() {
   const binary = configuredEnginePath();
   if (!binary) {
-    notify({ type: 'offline', reason: 'WMIX_ENGINE_BINARY not configured' });
+    notify({ type: 'offline', reason: 'Motor libobs não configurado. Use SELECIONAR OBS para escolher wmix-obs-smoke.exe.' });
     return;
   }
   if (engine) return;
