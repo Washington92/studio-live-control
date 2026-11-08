@@ -97,3 +97,14 @@ describe("native video diagnostics", () => {
     });
   });
 });
+
+describe("native Preview scene membership", () => {
+  it("parses whether the test source is attached to Preview", () => {
+    expect(parseNativeControlResponse("PREVIEW_SOURCE_STATUS PRESENT WMix Test Color")).toEqual({
+      type: "preview-source-status", present: true, name: "WMix Test Color",
+    });
+    expect(parseNativeControlResponse("PREVIEW_SOURCE_STATUS ABSENT WMix Test Color")).toEqual({
+      type: "preview-source-status", present: false, name: "WMix Test Color",
+    });
+  });
+});
