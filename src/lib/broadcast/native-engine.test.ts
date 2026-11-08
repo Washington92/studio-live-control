@@ -62,3 +62,14 @@ describe("native desktop contract", () => {
     expect(await nativeEngine()?.restart?.()).toEqual({ restarted: true });
   });
 });
+
+describe("native source status", () => {
+  it("distinguishes an attached source from an absent source", () => {
+    expect(parseNativeControlResponse("SOURCE_STATUS PRESENT WMix Test Color")).toEqual({
+      type: "source-status", present: true, name: "WMix Test Color",
+    });
+    expect(parseNativeControlResponse("SOURCE_STATUS ABSENT WMix Test Color")).toEqual({
+      type: "source-status", present: false, name: "WMix Test Color",
+    });
+  });
+});
