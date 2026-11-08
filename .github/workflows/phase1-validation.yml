@@ -65,6 +65,12 @@ jobs:
         run: npm test -- --run
       - name: TypeScript and frontend build
         run: npm run build
+      - name: Electron host syntax
+        run: node --check desktop/main.cjs
+      - name: Electron preload syntax
+        run: node --check desktop/preload.cjs
+      - name: RTMPS engine unit tests
+        run: node --test desktop/engine/rtmps-engine.test.mjs
       - name: Build standalone offline WMix desktop renderer
         run: bunx vite build --config desktop/vite.config.ts
       - name: Package portable WMix Electron for Windows
@@ -99,11 +105,5 @@ jobs:
           path: WMix-Desktop-Portable-Windows-x64.zip
           if-no-files-found: error
           retention-days: 30
-      - name: Electron host syntax
-        run: node --check desktop/main.cjs
-      - name: Electron preload syntax
-        run: node --check desktop/preload.cjs
-      - name: RTMPS engine unit tests
-        run: node --test desktop/engine/rtmps-engine.test.mjs
 # This job cannot validate native libobs without a matching OBS SDK/runtime,
 # a compatible GPU, actual sources, and an end-to-end Windows production test.
