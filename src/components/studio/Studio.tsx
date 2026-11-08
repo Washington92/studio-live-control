@@ -112,7 +112,10 @@ export function Studio() {
       if (active) setNativeStatus(ready ? "ready" : "offline");
     }).catch(() => { if (active) setNativeStatus("offline"); });
     const unsubscribe = bridge.onEvent((event) => {
-      if (active) setNativeStatus(event.type === "ready" ? "ready" : "offline");
+      if (!active) return;
+      setNativeStatus(event.type === "ready" ? "ready" : "offline");
+      if (event.type === "offline") setNativeDiagnostic(event.reason);
+      else setNativeDiagnostic("");
     });
     return () => { active = false; unsubscribe(); };
   }, []);
