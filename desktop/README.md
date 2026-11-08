@@ -67,3 +67,28 @@ A janela carrega a interface web local. O preload isolado disponibiliza `window.
 ## Proteção contra travamento
 
 Comandos IPC agora expiram após 5 segundos. Em timeout, o host encerra o processo nativo para evitar que uma resposta atrasada seja atribuída ao próximo comando. O motor fica offline até uma nova inicialização do aplicativo. O mecanismo ainda não implementa reinicialização automática.
+
+
+## Windows portable desktop build (experimental)
+
+The Windows GitHub Actions workflow now builds a **separate, static Vite renderer**
+using `bunx vite build --config desktop/vite.config.ts`. This is deliberately
+independent of the TanStack/Lovable SSR build, which remains unchanged.
+
+After frontend tests, the renderer build and Electron syntax checks pass, the
+workflow copies the Windows Electron runtime and the WMix renderer into a
+portable ZIP artifact named `WMix-Desktop-Portable-Windows-x64`.
+
+1. Open the GitHub repository **Actions** tab and select **WMix Phase 1 - Windows validation**.
+2. Select a successful run on `main`, then download the portable desktop artifact.
+3. Extract the ZIP to a normal folder (do not run it inside the archive).
+4. Launch `WMix.exe`. The interface loads from local files and does not need
+   a Lovable preview or a local Vite server.
+
+**Limitations:** this is an experimental portable Electron shell, not an
+installer, signed binary, or a complete libobs-powered production switcher.
+The OBS engine executable is **not** bundled. Native controls remain offline
+unless a separately built compatible `WMIX_ENGINE_BINARY` is configured.
+Camera, screen and web media permissions may require additional Electron
+packaging and Windows hardware tests. Successful CI does not replace a
+real Windows interactive test.
