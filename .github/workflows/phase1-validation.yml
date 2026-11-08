@@ -128,11 +128,12 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
       - name: Upload Windows desktop smoke screenshot
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: WMix-Windows-Desktop-Screenshot
           path: ${{ runner.temp }}/wmix-desktop-smoke.png
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 30
       - name: Upload portable WMix desktop build
         uses: actions/upload-artifact@v4
