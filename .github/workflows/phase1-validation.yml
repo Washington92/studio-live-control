@@ -73,6 +73,16 @@ jobs:
         run: node --test desktop/engine/rtmps-engine.test.mjs
       - name: Build standalone offline WMix desktop renderer
         run: bunx vite build --config desktop/vite.config.ts
+      - name: Ensure Electron Windows binary is installed
+        shell: pwsh
+        run: |
+          $electronExe = 'node_modules/electron/dist/electron.exe'
+          if (!(Test-Path $electronExe)) {
+            Write-Host 'Electron binary missing after Bun install; running its official install script.'
+            node node_modules/electron/install.js
+            if ($LASTEXITCODE -ne 0) { throw 'Electron binary download failed' }
+          }
+          if (!(Test-Path $electronExe)) { throw 'Electron Windows executable was not installed' }
       - name: Package portable WMix Electron for Windows
         shell: pwsh
         run: |
