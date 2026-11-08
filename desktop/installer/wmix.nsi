@@ -1,5 +1,6 @@
 !include "MUI2.nsh"
 !include "x64.nsh"
+!include "LogicLib.nsh"
 
 !ifndef WMIX_PAYLOAD_DIR
   !error "WMIX_PAYLOAD_DIR must point to the staged Windows desktop application"
