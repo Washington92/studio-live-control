@@ -98,6 +98,15 @@ jobs:
           if (@($assets | Where-Object { $_.Extension -eq '.css' }).Count -eq 0) { throw 'Desktop CSS bundle missing' }
           if (!(Test-Path (Join-Path $destination 'WMix.exe'))) { throw 'WMix executable missing' }
           Compress-Archive -Path (Join-Path $destination '*') -DestinationPath 'WMix-Desktop-Portable-Windows-x64.zip' -Force
+      - name: Smoke-test actual Windows Electron renderer
+        shell: pwsh
+        run: |
+          $exe = Join-Path $env:RUNNER_TEMP 'WMix-Desktop-Portable/WMix.exe'
+          if (!(Test-Path $exe)) { throw 'Packaged WMix.exe not found' }
+          $env:WMIX_SMOKE_TEST = '1'
+          $env:WMIX_ENGINE_BINARY = ''
+          $process = Start-Process -FilePath $exe -PassThru -Wait
+          if ($process.ExitCode -ne 0) { throw "WMix React mount smoke test failed: exit $($process.ExitCode)" }
       - name: Upload portable WMix desktop build
         uses: actions/upload-artifact@v4
         with:
