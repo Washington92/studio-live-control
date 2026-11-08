@@ -257,9 +257,11 @@ export function Studio() {
   // Keyboard shortcuts
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" && (e.target as HTMLInputElement).type !== "range") return;
-      if (tag === "TEXTAREA" || tag === "SELECT") return;
+      // Production shortcuts must never fire while editing or manipulating a control.
+      if (e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.closest('input, textarea, select, button, [role="slider"], [role="dialog"], [contenteditable="true"]')) return;
       if (/^[1-9]$/.test(e.key)) { const i = S.current.inputs[Number(e.key) - 1]; if (i) { if (e.shiftKey) { setPgm(i.id); } else setPvw(i.id); } }
       else if (e.code === "Space") { e.preventDefault(); cut(); }
       else if (e.key === "Enter") { e.preventDefault(); doAuto(); }
@@ -531,8 +533,8 @@ export function Studio() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-1">
-                  <button type="button" onClick={doAuto} className={cn("h-8 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
-                  <button type="button" onClick={cut} className="h-8 rounded-md border border-primary bg-primary text-xs font-bold text-primary-foreground hover:opacity-90">CUT</button>
+                  <button type="button" onClick={doAuto} aria-label="Iniciar transição automática do Preview para Program" className={cn("h-8 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
+                  <button type="button" onClick={cut} aria-label="Corte imediato do Preview para Program" className="h-8 rounded-md border border-primary bg-primary text-xs font-bold text-primary-foreground hover:opacity-90">CUT</button>
                 </div>
               </div>
               <div className="flex w-[65px] shrink-0 flex-col items-center justify-center gap-1 border-l border-border pl-2">
@@ -638,7 +640,7 @@ export function Studio() {
                         onClick={() => { setMonitorError(""); setMonitorInputId((id) => id === inp.id ? null : inp.id); }}
                         className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-30", monitorInputId === inp.id ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground hover:text-foreground")}
                       ><Headphones className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => setPgm(inp.id)} className="rounded-md bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
+                      <button onClick={() => setPgm(inp.id)} aria-label={`Cortar ${inp.name} diretamente para Program`} className="rounded-md bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
                       <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
                     </div>
                     <div className="flex items-center gap-1 px-1.5 pb-1.5">
