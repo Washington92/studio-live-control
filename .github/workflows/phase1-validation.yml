@@ -29,7 +29,9 @@ jobs:
           node-version: '22'
       - uses: oven-sh/setup-bun@v2
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        # Temporary compatibility step: package.json includes Electron but bun.lock
+        # was not regenerated. Restore --frozen-lockfile after committing a fresh bun.lock.
+        run: bun install
       - name: Configure standalone native frame engine (without libobs)
         run: cmake -S engine -B engine/build -DWMIX_WITH_LIBOBS=OFF
       - name: Build standalone native frame engine
