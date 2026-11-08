@@ -127,3 +127,15 @@ Com o desktop Electron conectado, `TESTAR FONTE OBS` cria a fonte e consulta sua
 `STATUS` agora consulta diretamente a cena conectada ao canal 0 do libobs, assim como `TALLY_STATUS`. O comando `CUT` calcula o destino a partir desse estado efetivo e verifica a cena após a troca. Se o canal 0 não estiver associado a uma das duas cenas controladas, retorna `ERROR CUT UNKNOWN` sem sobrescrever uma saída desconhecida. Em caso de falha, informa a cena efetivamente observada, em vez de reutilizar um estado lógico possivelmente desatualizado.
 
 Essa proteção evita divergência entre o estado do protocolo e a saída real, mas não substitui os testes de runtime Windows nem o mapeamento de entradas da interface.
+
+## Teste integrado do protocolo nativo
+
+O CTest `wmix_obs_control_protocol` executa `wmix-obs-smoke --control` com comandos em `tests/control_commands.txt` e valida respostas ordenadas por `tests/control_protocol.cmake`. Cobre inicialização, STATUS/TALLY, configuração de vídeo, ausência inicial de fonte, criação e associação ao Preview, CUT e presença na cena que está no ar. Falha em timeout, saída não zero ou divergência de protocolo.
+
+Executar após configurar o build **com libobs e plugins OBS disponíveis**:
+
+```powershell
+ctest --test-dir engine/build -C Release -R wmix_obs_control_protocol --output-on-failure
+```
+
+Esse teste exige runtime OBS e ambiente gráfico funcional. **Não** faz parte do workflow Windows que compila somente o gerador independente (`WMIX_WITH_LIBOBS=OFF`), e não comprova que quadros chegaram à interface React.
