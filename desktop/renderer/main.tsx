@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Studio } from "../../src/components/studio/Studio";
+const Studio = React.lazy(() =>
+  import("../../src/components/studio/Studio").then((module) => ({ default: module.Studio }))
+);
 import "../../src/styles.css";
 
 class DesktopErrorBoundary extends React.Component<
@@ -33,7 +35,7 @@ function DesktopStudio() {
     document.documentElement.dataset.wmixStudioReady = "true";
     return () => { delete document.documentElement.dataset.wmixStudioReady; };
   }, []);
-  return <Studio />;
+  return <React.Suspense fallback={<div role="status" style={{ padding: 24 }}>Inicializando WMix Studio…</div>}><Studio /></React.Suspense>;
 }
 
 const root = document.getElementById("root");
