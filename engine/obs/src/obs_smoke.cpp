@@ -4,11 +4,12 @@
 
 int main(int argc, char** argv) {
   const bool initialize_scene = argc == 2 && std::string(argv[1]) == "--scene";
+  const bool initialize_control = argc == 2 && std::string(argv[1]) == "--control";
   const bool initialize_switch = argc == 2 && std::string(argv[1]) == "--switch";
   const bool initialize_dual = argc == 2 && std::string(argv[1]) == "--dual";
-  const bool initialize_av = initialize_scene || initialize_dual || initialize_switch || (argc == 2 && std::string(argv[1]) == "--av");
+  const bool initialize_av = initialize_scene || initialize_dual || initialize_switch || initialize_control || (argc == 2 && std::string(argv[1]) == "--av");
   if (argc > 1 && !initialize_av) {
-    std::cerr << "Uso: wmix-obs-smoke [--av | --scene | --dual | --switch]\n";
+    std::cerr << "Uso: wmix-obs-smoke [--av | --scene | --dual | --switch | --control]\n";
     return 2;
   }
 
@@ -47,10 +48,10 @@ int main(int argc, char** argv) {
         result = 1;
       } else {
         std::cout << "WMix: libobs video 1280x720@30 e audio 48kHz inicializados.\n";
-        if (initialize_scene || initialize_dual || initialize_switch) {
+        if (initialize_scene || initialize_dual || initialize_switch || initialize_control) {
           obs_scene_t* program = obs_scene_create("WMix Program");
-          obs_scene_t* preview = (initialize_dual || initialize_switch) ? obs_scene_create("WMix Preview") : nullptr;
-          if (!program || ((initialize_dual || initialize_switch) && !preview)) {
+          obs_scene_t* preview = (initialize_dual || initialize_switch || initialize_control) ? obs_scene_create("WMix Preview") : nullptr;
+          if (!program || ((initialize_dual || initialize_switch || initialize_control) && !preview)) {
             std::cerr << "WMix: falha ao criar cenas.\n";
             result = 1;
           } else {
@@ -78,6 +79,37 @@ int main(int argc, char** argv) {
               std::cout << "WMix: CUT Preview -> Program concluido.\n";
             }
             if (active) obs_source_release(active);
+          }
+          if (initialize_control && program && preview && result == 0) {
+            // Line-oriented command protocol. This is a native CLI transport,
+            // not yet connected to the browser-based WMix interface.
+            std::cout << "READY WMIX_OBS_CONTROL_V1" << std::endl;
+            std::string command;
+            bool preview_on_air = false;
+            while (std::getline(std::cin, command)) {
+              if (command == "QUIT") {
+                std::cout << "BYE" << std::endl;
+                break;
+              }
+              if (command == "STATUS") {
+                std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+              } else if (command == "CUT") {
+                preview_on_air = !preview_on_air;
+                obs_source_t* desired = obs_scene_get_source(preview_on_air ? preview : program);
+                obs_set_output_source(0, desired);
+                obs_source_t* active = obs_get_output_source(0);
+                const bool ok = active == desired;
+                if (active) obs_source_release(active);
+                std::cout << (ok ? "OK CUT " : "ERROR CUT ")
+                          << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+                if (!ok) {
+                  result = 1;
+                  break;
+                }
+              } else if (!command.empty()) {
+                std::cout << "ERROR UNKNOWN_COMMAND" << std::endl;
+              }
+            }
           }
           obs_set_output_source(0, nullptr);
           if (preview) obs_scene_release(preview);
