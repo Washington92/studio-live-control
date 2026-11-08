@@ -117,6 +117,18 @@ int main(int argc, char** argv) {
               }
               if (command == "STATUS") {
                 std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+              } else if (command == "VIDEO_STATUS") {
+                // Report actual libobs video subsystem configuration, not an
+                // unverified frame counter or a claim that Preview is visible.
+                obs_video_info current{};
+                if (!obs_get_video_info(&current)) {
+                  std::cout << "ERROR VIDEO_UNAVAILABLE" << std::endl;
+                } else {
+                  std::cout << "VIDEO_STATUS "
+                            << current.output_width << "x" << current.output_height
+                            << " " << current.fps_num << "/" << current.fps_den
+                            << std::endl;
+                }
               } else if (command == "PROGRAM_SOURCE_STATUS") {
                 // Inspect the actual scene connected to output channel 0.
                 // This verifies scene routing, not decoded/rendered video frames.
