@@ -152,6 +152,12 @@ app.whenReady().then(() => {
         );
         clearTimeout(timeout);
         console.log('[WMix Smoke] React mounted:', mounted);
+        if (mounted && process.env.WMIX_SMOKE_SCREENSHOT) {
+          const fs = require('node:fs');
+          const screenshot = await window.webContents.capturePage();
+          fs.writeFileSync(process.env.WMIX_SMOKE_SCREENSHOT, screenshot.toPNG());
+          console.log('[WMix Smoke] Screenshot saved:', process.env.WMIX_SMOKE_SCREENSHOT);
+        }
         app.exit(mounted ? 0 : 3);
       } catch (error) {
         clearTimeout(timeout);
