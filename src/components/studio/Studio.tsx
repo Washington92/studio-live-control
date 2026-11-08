@@ -508,8 +508,9 @@ export function Studio() {
               const response = await bridge.command("CUT");
               if (!response.startsWith("OK CUT ")) throw new Error(`CUT nativo não confirmado: ${response}`);
               const after = await bridge.command("STATUS");
+              const tally = await bridge.command("TALLY_STATUS");
               const onAirState = await bridge.command("PROGRAM_SOURCE_STATUS");
-              setNativeDiagnostic(`${before} · ${response} · ${after} · ${onAirState}`);
+              setNativeDiagnostic(`${before} · ${response} · ${after} · ${tally} · ${onAirState}`);
             } catch (error) {
               setNativeDiagnostic(error instanceof Error ? error.message : "Falha no CUT nativo");
             } finally {
