@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   }
 
   int result = 0;
-  if (initialize_sources) {
+  if (initialize_sources || initialize_control) {
     // OBS plugins must be loaded before creating plugin-provided sources.
     obs_load_all_modules();
     obs_log_loaded_modules();
@@ -117,6 +117,24 @@ int main(int argc, char** argv) {
               }
               if (command == "STATUS") {
                 std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+              } else if (command == "ADD_TEST_SOURCE") {
+                // A deterministic source for verifying native scene wiring.
+                // Real cameras and UI input IDs require a separate mapping protocol.
+                obs_source_t* existing = obs_get_source_by_name("WMix Test Color");
+                if (existing) {
+                  obs_source_release(existing);
+                  std::cout << "OK SOURCE WMix Test Color" << std::endl;
+                } else {
+                  obs_source_t* source = obs_source_create("color_source", "WMix Test Color", nullptr, nullptr);
+                  if (!source) {
+                    std::cout << "ERROR SOURCE_UNAVAILABLE" << std::endl;
+                  } else {
+                    obs_sceneitem_t* item = obs_scene_add(preview, source);
+                    std::cout << (item ? "OK SOURCE WMix Test Color" : "ERROR SOURCE_ATTACH")
+                              << std::endl;
+                    obs_source_release(source);
+                  }
+                }
               } else if (command == "CUT") {
                 // Commit the logical Program state only after libobs confirms
                 // the output source. A failed CUT must not flip STATUS.
