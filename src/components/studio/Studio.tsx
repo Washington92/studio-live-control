@@ -5,6 +5,7 @@ import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
 import { WhipPublisher } from "@/lib/broadcast/whip-output";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { nativeEngine } from "@/lib/broadcast/native-engine";
 import { Meter, Strip, type Channel, type Level } from "./Mixer";
 
@@ -85,7 +86,7 @@ export function Studio() {
     logo: { on: true, text: "TV" },
   });
   const [channels, setChannels] = useState<Record<string, Channel>>(() => Object.fromEntries(INITIAL.map((i) => [i.id, defCh(i.kind)])));
-  const [buses, setBuses] = useState<Record<string, Channel>>({
+  const [buses, setBuses] = useState<Record<"master" | "aux1" | "aux2", Channel>>({
     master: { fader: 0.75, mute: false, solo: false, afv: false, a1: false, a2: false },
     aux1: { fader: 0.75, mute: false, solo: false, afv: false, a1: false, a2: false },
     aux2: { fader: 0.75, mute: false, solo: false, afv: false, a1: false, a2: false },
@@ -210,7 +211,7 @@ export function Studio() {
       whipOutput.current?.update({
         inputs: st.inputs,
         channels: st.channels,
-        master: st.buses.master,
+        master: st.buses["master"],
         programId: st.pgm,
         previewId: st.pvw,
         transition: prog.current,
@@ -219,7 +220,7 @@ export function Studio() {
       output.current?.update({
         inputs: st.inputs,
         channels: st.channels,
-        master: st.buses.master,
+        master: st.buses["master"],
         programId: st.pgm,
         previewId: st.pvw,
         transition: prog.current,
@@ -388,7 +389,7 @@ export function Studio() {
       const stream = engine.start();
       const st = S.current;
       engine.update({
-        inputs: st.inputs, channels: st.channels, master: st.buses.master,
+        inputs: st.inputs, channels: st.channels, master: st.buses["master"],
         programId: st.pgm, previewId: st.pvw,
         transition: prog.current, fadeToBlack: ftbAlpha.current,
       });
@@ -430,7 +431,7 @@ export function Studio() {
       engine.update({
         inputs: S.current.inputs,
         channels: S.current.channels,
-        master: S.current.buses.master,
+        master: S.current.buses["master"],
         programId: S.current.pgm,
         previewId: S.current.pvw,
         transition: prog.current,
@@ -468,9 +469,9 @@ export function Studio() {
   const anySolo = Object.values(channels).some((c) => c.solo);
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background font-sans text-foreground select-none">
+    <div className="wmix-studio flex h-dvh min-h-0 flex-col overflow-hidden bg-background font-sans text-foreground select-none">
       {/* TOP TELEMETRY */}
-      <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-panel-strong px-3 py-2 sm:flex-nowrap">
+      <header className="wmix-chrome flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-panel-strong px-3 py-2 sm:flex-nowrap">
         <div className="flex items-center gap-2">
           <img src="/wmix-logo.svg" alt="wMix" className="h-8 w-auto max-w-[125px] object-contain" />
         </div>
@@ -480,7 +481,7 @@ export function Studio() {
           {nativeStatus === "ready" ? "OBS: CONECTADO" : nativeStatus === "offline" ? "OBS: OFFLINE" : "MOTOR: WEB"}
         </span>
         {nativeStatus === "ready" && (
-          <button type="button" disabled={nativeBusy} className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent disabled:opacity-50" title="Criar fonte de teste somente no motor nativo; não altera as entradas web" onClick={async () => {
+          <Button variant="console" size="console" type="button" disabled={nativeBusy} className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent disabled:opacity-50" title="Criar fonte de teste somente no motor nativo; não altera as entradas web" onClick={async () => {
             const bridge = nativeEngine();
             if (!bridge) return;
             setNativeBusy(true);
@@ -494,30 +495,30 @@ export function Studio() {
             } finally {
               setNativeBusy(false);
             }
-          }}>TESTAR FONTE OBS</button>
+          }}>TESTAR FONTE OBS</Button>
         )}
         {nativeDiagnostic && <span role="status" className="max-w-[210px] truncate text-[10px] text-muted-foreground" title={nativeDiagnostic}>{nativeDiagnostic}</span>}
         {nativeStatus === "offline" && nativeEngine()?.restart && (
-          <button type="button" className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent" title="Tentar reiniciar o processo nativo" onClick={async () => {
+          <Button variant="console" size="console" type="button" className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent" title="Tentar reiniciar o processo nativo" onClick={async () => {
             try {
               const result = await nativeEngine()?.restart?.();
               if (!result?.restarted) console.warn("WMix engine restart:", result?.reason);
             } catch (error) { console.error("WMix engine restart failed:", error); }
-          }}>REINICIAR OBS</button>
+          }}>REINICIAR OBS</Button>
         )}
         <Timer label="REC" since={rec} now={now} tone="pgm" />
         <Timer label="LIVE" since={live} now={now} tone="pgm" />
-        <button onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
+        <Button variant="console" size="console" onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
           {rec ? <Square className="h-3 w-3 fill-current" /> : <Circle className="h-3 w-3 fill-pgm text-pgm" />} {rec ? "PARAR REC" : "GRAVAR"}
-        </button>
-        <button disabled={whipBusy} onClick={() => { if (live) void stopWhip(); else setWhipSettingsOpen(true); }} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", live ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
+        </Button>
+        <Button variant="console" size="console" disabled={whipBusy} onClick={() => { if (live) void stopWhip(); else setWhipSettingsOpen(true); }} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", live ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
           <Radio className="h-4 w-4" /> {live ? "NO AR" : "TRANSMITIR"}
-        </button>
+        </Button>
       </header>
 
       {whipSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
-          <section role="dialog" aria-modal="true" aria-label="Configurar transmissão WHIP" className="max-h-[90dvh] w-full max-w-md space-y-3 overflow-y-auto rounded-md border border-border bg-panel p-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center wmix-scrim p-4">
+          <section role="dialog" aria-modal="true" aria-label="Configurar transmissão WHIP" className="wmix-dialog max-h-[90dvh] w-full max-w-md space-y-3 overflow-y-auto rounded-md border border-border bg-panel p-5 shadow-2xl">
             <h2 className="text-base font-bold">Transmissão ao vivo · WebRTC/WHIP</h2>
             <p className="text-xs text-muted-foreground">Transmite o Program e o áudio Master para um destino WHIP HTTPS. RTMP/RTMPS (YouTube) ainda não está disponível nesta versão.</p>
             <label className="block space-y-1 text-xs">
@@ -530,10 +531,10 @@ export function Studio() {
             </label>
             {whipError && <p role="alert" className="rounded-md border border-pgm p-2 text-xs text-pgm">{whipError}</p>}
             <div className="flex justify-end gap-2">
-              <button type="button" disabled={whipBusy} className="rounded-md border border-border bg-secondary px-3 py-2 text-xs" onClick={() => { setWhipSettingsOpen(false); setWhipError(""); setWhipToken(""); }}>Cancelar</button>
-              <button type="button" disabled={whipBusy || !whipEndpoint.trim()} className="rounded-md bg-pgm px-3 py-2 text-xs font-bold text-pgm-foreground disabled:opacity-50" onClick={() => void startWhip()}>
+              <Button variant="console" size="console" type="button" disabled={whipBusy} className="rounded-md border border-border bg-secondary px-3 py-2 text-xs" onClick={() => { setWhipSettingsOpen(false); setWhipError(""); setWhipToken(""); }}>Cancelar</Button>
+              <Button variant="console" size="console" type="button" disabled={whipBusy || !whipEndpoint.trim()} className="rounded-md bg-pgm px-3 py-2 text-xs font-bold text-pgm-foreground disabled:opacity-50" onClick={() => void startWhip()}>
                 {whipBusy ? "Conectando..." : "Iniciar transmissão"}
-              </button>
+              </Button>
             </div>
           </section>
         </div>
@@ -551,7 +552,7 @@ export function Studio() {
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="grid grid-cols-3 gap-1" role="group" aria-label="Selecionar efeito de transição">
                   {TRANSITIONS.map((t) => (
-                    <button key={t} type="button" onClick={() => setTrType(t)}
+                    <Button variant="console" size="console" key={t} type="button" onClick={() => setTrType(t)}
                       aria-pressed={trType === t} title={t}
                       className={cn("flex h-10 min-w-0 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors", trType === t ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:border-primary/50 hover:text-foreground")}>
                       <span aria-hidden="true" className="flex h-4 w-7 items-center justify-center overflow-hidden rounded-sm border border-current/70">
@@ -567,20 +568,20 @@ export function Studio() {
                         {t === "FLIP" && <span className="text-[10px] font-bold">⇄</span>}
                       </span>
                       <span className="text-[9px] font-semibold">{t}</span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 <div className="flex items-center justify-between gap-1 text-[10px] text-muted-foreground">
                   <span className="font-semibold">Duração</span>
                   <div className="flex items-center rounded-md border border-border bg-secondary">
-                    <button type="button" aria-label="Diminuir duração" onClick={() => setDur((value) => Math.max(100, value - 100))} className="px-2 py-1 hover:text-primary">−</button>
+                    <Button variant="console" size="console" type="button" aria-label="Diminuir duração" onClick={() => setDur((value) => Math.max(100, value - 100))} className="px-2 py-1 hover:text-primary">−</Button>
                     <span className="min-w-12 text-center tabular-nums text-foreground">{(dur / 1000).toFixed(1)} s</span>
-                    <button type="button" aria-label="Aumentar duração" onClick={() => setDur((value) => Math.min(10000, value + 100))} className="px-2 py-1 hover:text-primary">+</button>
+                    <Button variant="console" size="console" type="button" aria-label="Aumentar duração" onClick={() => setDur((value) => Math.min(10000, value + 100))} className="px-2 py-1 hover:text-primary">+</Button>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-1">
-                  <button type="button" onClick={doAuto} aria-label="Iniciar transição automática do Preview para Program" className={cn("h-8 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</button>
-                  <button type="button" onClick={cut} aria-label="Corte imediato do Preview para Program" className="h-8 rounded-md border border-primary bg-primary text-xs font-bold text-primary-foreground hover:opacity-90">CUT</button>
+                  <Button variant="console" size="console" type="button" onClick={doAuto} aria-label="Iniciar transição automática do Preview para Program" className={cn("h-8 rounded-md border text-xs font-bold", progress > 0 ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>AUTO</Button>
+                  <Button variant="console" size="console" type="button" onClick={cut} aria-label="Corte imediato do Preview para Program" className="h-8 rounded-md border border-primary bg-primary text-xs font-bold text-primary-foreground hover:opacity-90">CUT</Button>
                 </div>
               </div>
               <div className="flex w-[65px] shrink-0 flex-col items-center justify-center gap-1 border-l border-border pl-2">
@@ -592,8 +593,8 @@ export function Studio() {
               </div>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-1">
-              <button onClick={() => setFtb((f) => !f)} className={cn("h-7 rounded-md border text-[10px] font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</button>
-              <button onClick={() => setSafe((value) => !value)} className={cn("h-7 rounded-md border text-[10px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</button>
+              <Button variant="console" size="console" onClick={() => setFtb((f) => !f)} className={cn("h-7 rounded-md border text-[10px] font-bold tracking-wider", ftb ? "animate-pulse border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>FTB</Button>
+              <Button variant="console" size="console" onClick={() => setSafe((value) => !value)} className={cn("h-7 rounded-md border text-[10px] font-bold", safe ? "border-primary text-primary" : "border-border text-muted-foreground")}>SAFE AREAS</Button>
             </div>
           </div>
         </DockPanel>
@@ -605,9 +606,9 @@ export function Studio() {
             <div className="flex flex-wrap items-center gap-1 px-2 pt-2 pb-1">
               
               {monitorError && <span role="alert" className="max-w-48 truncate text-[10px] text-pgm" title={monitorError}>{monitorError}</span>}
-              <button type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-md border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></button>
-              <button type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-md border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></button>
-              <button type="button" aria-label="Configurações da fonte selecionada" title="Renomear fonte selecionada" disabled={!selectedInputId} onClick={configureSelectedInput} className="rounded-md border border-border bg-secondary p-1 hover:text-primary disabled:opacity-40"><Settings className="h-4 w-4" /></button>
+              <Button variant="console" size="console" type="button" aria-label="Adicionar fonte" title="Adicionar fonte" onClick={() => setInputsActionsOpen((open) => !open)} aria-expanded={inputsActionsOpen} className="rounded-md border border-border bg-secondary p-1 hover:text-primary"><Plus className="h-4 w-4" /></Button>
+              <Button variant="console" size="console" type="button" aria-label="Remover fonte selecionada" title="Remover fonte selecionada" disabled={!selectedInputId || selectedInputId === pgm || selectedInputId === pvw} onClick={() => { if (selectedInputId) removeInput(selectedInputId); }} className="rounded-md border border-border bg-secondary p-1 hover:text-pgm disabled:opacity-40"><Minus className="h-4 w-4" /></Button>
+              <Button variant="console" size="console" type="button" aria-label="Configurações da fonte selecionada" title="Renomear fonte selecionada" disabled={!selectedInputId} onClick={configureSelectedInput} className="rounded-md border border-border bg-secondary p-1 hover:text-primary disabled:opacity-40"><Settings className="h-4 w-4" /></Button>
               {inputsActionsOpen && (
                 <>
               <AddBtn icon={Camera} label="Webcam" onClick={addCamera} />
@@ -623,17 +624,17 @@ export function Studio() {
             </div>
             <div className="flex flex-wrap items-center gap-1 px-2 pb-1" aria-label="Grupos de entradas">
               {inputGroups.map((group) => (
-                <button key={group.id} type="button" onClick={() => setActiveInputGroup(group.id)}
+                <Button variant="console" size="console" key={group.id} type="button" onClick={() => setActiveInputGroup(group.id)}
                   aria-pressed={activeInputGroup === group.id}
                   className={cn("rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors", activeInputGroup === group.id ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:text-foreground")}>
                   {group.name} · {group.id === "all" ? inputs.length : inputs.filter((item) => inputGroupAssignments[item.id] === group.id).length}
-                </button>
+                </Button>
               ))}
-              <button type="button" onClick={createInputGroup} aria-label="Criar grupo" title="Criar grupo" className="rounded-md border border-border p-1 text-muted-foreground hover:text-primary"><Plus className="h-3.5 w-3.5" /></button>
+              <Button variant="console" size="console" type="button" onClick={createInputGroup} aria-label="Criar grupo" title="Criar grupo" className="rounded-md border border-border p-1 text-muted-foreground hover:text-primary"><Plus className="h-3.5 w-3.5" /></Button>
               {activeInputGroup !== "all" && (
                 <>
-                  <button type="button" onClick={renameInputGroup} aria-label="Renomear grupo" title="Renomear grupo" className="rounded-md border border-border p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
-                  <button type="button" onClick={deleteInputGroup} aria-label="Excluir grupo" title="Excluir grupo sem remover entradas" className="rounded-md border border-border p-1 text-muted-foreground hover:text-pgm"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <Button variant="console" size="console" type="button" onClick={renameInputGroup} aria-label="Renomear grupo" title="Renomear grupo" className="rounded-md border border-border p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></Button>
+                  <Button variant="console" size="console" type="button" onClick={deleteInputGroup} aria-label="Excluir grupo" title="Excluir grupo sem remover entradas" className="rounded-md border border-border p-1 text-muted-foreground hover:text-pgm"><Trash2 className="h-3.5 w-3.5" /></Button>
                 </>
               )}
               <select aria-label="Mover entrada selecionada para grupo" title="Atribuir entrada selecionada a um grupo"
@@ -652,14 +653,14 @@ export function Studio() {
                 const tally = tallyOf(inp.id); const Icon = KIND_ICON[inp.kind];
                 const audio = channels[inp.id] ?? defCh(inp.kind);
                 return (
-                  <div key={inp.id} className={cn("group overflow-hidden rounded-xl border-2 bg-panel-strong transition-colors", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
-                    <div className="flex items-stretch bg-black">
-                      <button onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block min-w-0 flex-1 aspect-video overflow-hidden bg-black">
+                  <div key={inp.id} className={cn("group overflow-hidden rounded-md border-2 bg-panel-strong transition-colors", tally === "pgm" ? "border-pgm" : tally === "pvw" ? "border-pvw" : "border-border")}>
+                    <div className="flex items-stretch bg-meter-bg">
+                      <Button variant="console" size="console" onClick={() => { setSelectedInputId(inp.id); setPvw(inp.id); }} onDoubleClick={() => setPgm(inp.id)} className="relative block min-w-0 flex-1 aspect-video overflow-hidden bg-meter-bg">
                         <canvas ref={(el) => { if (el) thumbs.current.set(inp.id, el); else thumbs.current.delete(inp.id); }} width={320} height={180} className="absolute inset-0 h-full w-full object-contain" />
                         <span className="absolute left-1 top-1 rounded-md bg-background/80 px-1 text-[10px] font-semibold">{i + 1}</span>
                         {tally && <span className={cn("absolute right-1 top-1 rounded-md px-1 text-[10px] font-semibold", tally === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>{tally === "pgm" ? "PGM" : "PVW"}</span>}
                         <div className="absolute bottom-1 right-1 flex h-8 gap-px"><Meter level={levels[inp.id]} className="w-1" /></div>
-                      </button>
+                      </Button>
                       <div className="flex w-9 shrink-0 flex-col items-center justify-center gap-1 border-l border-border/40 bg-panel/70 px-0.5 py-1">
                         <input type="range" min={0} max={1000} step={1}
                           value={Math.round(audio.fader * 1000)}
@@ -670,32 +671,32 @@ export function Studio() {
                           className="input-mini-fader"
                         />
                         <span className="text-[9px] font-medium tabular-nums text-muted-foreground">{Math.round(audio.fader * 100)}%</span>
-                        <button type="button" aria-label={`${audio.mute ? "Ativar" : "Silenciar"} áudio de ${inp.name}`} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"} onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })} className={cn("flex h-5 w-6 items-center justify-center rounded-md transition-colors", audio.mute ? "text-muted-foreground" : "text-primary hover:bg-primary/10")}>
+                        <Button variant="console" size="console" type="button" aria-label={`${audio.mute ? "Ativar" : "Silenciar"} áudio de ${inp.name}`} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"} onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })} className={cn("flex h-5 w-6 items-center justify-center rounded-md transition-colors", audio.mute ? "text-muted-foreground" : "text-primary hover:bg-primary/10")}>
                           {audio.mute ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 bg-panel px-1.5 py-1.5">
                       <Icon className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="flex-1 truncate text-xs font-medium">{inp.name}</span>
-                      <button type="button"
+                      <Button variant="console" size="console" type="button"
                         disabled={!inp.stream?.getAudioTracks().some((track) => track.readyState === "live")}
                         aria-pressed={monitorInputId === inp.id}
                         aria-label={`${monitorInputId === inp.id ? "Parar escuta de" : "Ouvir no fone"} ${inp.name}`}
                         title={inp.stream?.getAudioTracks().some((track) => track.readyState === "live") ? "Escutar fonte no fone (sem alterar Program)" : "Esta fonte não possui faixa de áudio monitorável"}
                         onClick={() => { setMonitorError(""); setMonitorInputId((id) => id === inp.id ? null : inp.id); }}
                         className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-30", monitorInputId === inp.id ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground hover:text-foreground")}
-                      ><Headphones className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => setPgm(inp.id)} aria-label={`Cortar ${inp.name} diretamente para Program`} className="rounded-md bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</button>
-                      <button onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></button>
+                      ><Headphones className="h-3.5 w-3.5" /></Button>
+                      <Button variant="console" size="console" onClick={() => setPgm(inp.id)} aria-label={`Cortar ${inp.name} diretamente para Program`} className="rounded-md bg-secondary px-1 text-[10px] font-semibold hover:bg-pgm hover:text-pgm-foreground" title="Cortar direto para PGM">CUT</Button>
+                      <Button variant="console" size="console" onClick={() => removeInput(inp.id)} className="text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-pgm" title="Remover"><Trash2 className="h-3 w-3" /></Button>
                     </div>
                     <div className="flex items-center gap-1 px-1.5 pb-1.5">
-                      <button type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
+                      <Button variant="console" size="console" type="button" aria-pressed={audio.mute} title={audio.mute ? "Ativar áudio" : "Silenciar áudio"}
                         onClick={() => updateInputAudio(inp.id, { mute: !audio.mute })}
-                        className={cn("rounded-md border px-1.5 py-0.5 text-[10px] font-semibold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</button>
-                      <button type="button" title="Configurações da entrada" aria-label={`Configurações de ${inp.name}`}
+                        className={cn("rounded-md border px-1.5 py-0.5 text-[10px] font-semibold", audio.mute ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary text-muted-foreground")}>{audio.mute ? "MUTADO" : "MUTAR"}</Button>
+                      <Button variant="console" size="console" type="button" title="Configurações da entrada" aria-label={`Configurações de ${inp.name}`}
                         onClick={() => { setSettingsInputId(inp.id); setSettingsTab("geral"); }}
-                        className="ml-auto rounded-md border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></button>
+                        className="ml-auto rounded-md border border-border bg-secondary p-1 text-muted-foreground hover:text-primary"><Settings className="h-3.5 w-3.5" /></Button>
                     </div>
                   </div>
                 );
@@ -710,15 +711,15 @@ export function Studio() {
           const ch = channels[input.id] ?? defCh(input.kind);
           const hasAudio = input.kind === "camera" || input.kind === "screen" || input.kind === "file";
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsInputId(null); }}>
-              <section role="dialog" aria-modal="true" aria-label={`Configurações de ${input.name}`} className="flex w-full max-w-lg flex-col gap-3 rounded-md border border-border bg-panel p-4 font-sans text-xs leading-relaxed shadow-2xl">
+            <div className="fixed inset-0 z-50 flex items-center justify-center wmix-scrim p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsInputId(null); }}>
+              <section role="dialog" aria-modal="true" aria-label={`Configurações de ${input.name}`} className="wmix-dialog flex max-h-[90dvh] overflow-y-auto w-full max-w-lg flex-col gap-3 rounded-md border border-border bg-panel p-4 font-sans text-xs leading-relaxed shadow-2xl">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0"><div className="text-sm font-semibold tracking-wide">CONFIGURAÇÕES DA ENTRADA</div><div className="truncate text-xs text-muted-foreground">{input.name}</div></div>
-                  <button type="button" onClick={() => setSettingsInputId(null)} className="rounded-md border border-border px-2 py-1 text-xs font-medium">FECHAR</button>
+                  <Button variant="console" size="console" type="button" onClick={() => setSettingsInputId(null)} className="rounded-md border border-border px-2 py-1 text-xs font-medium">FECHAR</Button>
                 </div>
                 <div className="flex flex-wrap gap-1 border-b border-border pb-2">
                   {(["geral", "audio", "video", "avancado"] as const).map((tab) => (
-                    <button type="button" key={tab} onClick={() => setSettingsTab(tab)} className={cn("rounded-md border px-3 py-1.5 text-xs font-medium uppercase", settingsTab === tab ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary")}>{tab === "audio" ? "Áudio" : tab === "avancado" ? "Avançado" : tab === "video" ? "Vídeo" : "Geral"}</button>
+                    <Button variant="console" size="console" type="button" key={tab} onClick={() => setSettingsTab(tab)} className={cn("rounded-md border px-3 py-1.5 text-xs font-medium uppercase", settingsTab === tab ? "border-primary bg-primary text-primary-foreground" : "border-border bg-secondary")}>{tab === "audio" ? "Áudio" : tab === "avancado" ? "Avançado" : tab === "video" ? "Vídeo" : "Geral"}</Button>
                   ))}
                 </div>
                 {settingsTab === "geral" && <div className="flex flex-col gap-3">
@@ -726,8 +727,8 @@ export function Studio() {
                     <input className="rounded-md border border-border bg-background p-2 text-xs" value={input.name} maxLength={80} onChange={(event) => setInputs((current) => current.map((item) => item.id === input.id ? { ...item, name: event.target.value } : item))} />
                   </label>
                   <div className="text-xs text-muted-foreground">Tipo: {input.kind} · ID: {input.id}</div>
-                  <button type="button" className="self-start rounded-md border border-border bg-secondary px-3 py-2 text-xs font-medium" onClick={() => { const copy = mkInput(input.kind, `${input.name} (cópia)`, input.hue); if (input.kind === "camera" || input.kind === "screen" || input.kind === "file") { window.alert("Para duplicar esta fonte de mídia, adicione-a novamente pelo painel de entradas."); return; } addInput(copy); setSettingsInputId(copy.id); }}>Duplicar entrada</button>
-                  <button type="button" disabled={input.id === pgm || input.id === pvw} className="self-start rounded-md border border-border px-3 py-2 text-xs font-medium text-pgm disabled:opacity-40" onClick={() => { removeInput(input.id); setSettingsInputId(null); }}>Remover entrada</button>
+                  <Button variant="console" size="console" type="button" className="self-start rounded-md border border-border bg-secondary px-3 py-2 text-xs font-medium" onClick={() => { const copy = mkInput(input.kind, `${input.name} (cópia)`, input.hue); if (input.kind === "camera" || input.kind === "screen" || input.kind === "file") { window.alert("Para duplicar esta fonte de mídia, adicione-a novamente pelo painel de entradas."); return; } addInput(copy); setSettingsInputId(copy.id); }}>Duplicar entrada</Button>
+                  <Button variant="console" size="console" type="button" disabled={input.id === pgm || input.id === pvw} className="self-start rounded-md border border-border px-3 py-2 text-xs font-medium text-pgm disabled:opacity-40" onClick={() => { removeInput(input.id); setSettingsInputId(null); }}>Remover entrada</Button>
                   {(input.id === pgm || input.id === pvw) && <div className="text-xs text-muted-foreground">Para remover, retire a entrada de Preview e Program primeiro.</div>}
                 </div>}
                 {settingsTab === "audio" && <div className="flex flex-col gap-3">
@@ -804,7 +805,7 @@ export function Studio() {
       </main>
 
       {/* STATUS BAR */}
-      <footer className="flex h-auto min-h-10 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-panel-strong px-3 py-1 font-mono text-[10px] text-muted-foreground">
+      <footer className="wmix-chrome flex h-auto min-h-10 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-panel-strong px-3 py-1 font-mono text-[10px] text-muted-foreground">
         <div className="flex shrink-0 items-center gap-3">
         <Tele label="FPS" value={tele.fps.toFixed(1)} warn={tele.fps < 50} />
         <Tele label="RENDER" value={`${tele.render.toFixed(2)} ms`} warn={tele.render > 16} />
@@ -926,7 +927,7 @@ function DockPanel({
         <Grip aria-hidden="true" className="h-3.5 w-3.5" />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-1.5">{children}</div>
-      <button
+      <Button variant="console" size="console"
         type="button"
         aria-label={`Redimensionar ${title}`}
         title="Arraste para ajustar largura e altura do painel"
@@ -935,7 +936,7 @@ function DockPanel({
         onPointerMove={resizePanel}
         onPointerUp={() => { resizeStart.current = null; }}
         onPointerCancel={() => { resizeStart.current = null; }}
-      >◢</button>
+      >◢</Button>
     </section>
   );
 }
@@ -944,13 +945,13 @@ function Tele({ label, value, warn }: { label: string; value: string; warn?: boo
   return (
     <div className="flex flex-col leading-none">
       <span className="font-sans text-[10px] tracking-widest text-muted-foreground">{label}</span>
-      <span className={cn("font-sans text-xs font-semibold", warn ? "text-warn" : "text-foreground")}>{value}</span>
+      <span className={cn("wmix-readout font-mono text-xs font-semibold", warn ? "text-warn" : "text-foreground")}>{value}</span>
     </div>
   );
 }
 function Timer({ label, since, now }: { label: string; since: number | null; now: number; tone: "pgm" }) {
   return (
-    <div className={cn("flex items-center gap-2 rounded-md border px-2 py-1 font-mono text-xs", since ? "border-pgm text-foreground" : "border-border text-muted-foreground")}>
+    <div className={cn("wmix-readout flex items-center gap-2 rounded-md border px-2 py-1 font-mono text-xs", since ? "border-pgm text-foreground" : "border-border text-muted-foreground")}>
       <span className={cn("text-[10px] font-bold", since && "text-pgm")}>{label}</span>
       {smpte(since ? now - since : 0)}
     </div>
@@ -958,8 +959,8 @@ function Timer({ label, since, now }: { label: string; since: number | null; now
 }
 function MonitorBox({ title, tone, source, safe, children }: { title: string; tone: "pvw" | "pgm"; source: string; safe: boolean; children: React.ReactNode }) {
   return (
-    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border-2 bg-black", tone === "pgm" ? "border-pgm" : "border-pvw")}>
-      <div className={cn("flex shrink-0 items-center justify-between gap-2 px-2 py-1 font-sans text-xs font-semibold tracking-wide", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
+    <div className={cn("flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border-2 bg-meter-bg", tone === "pgm" ? "border-pgm" : "border-pvw")}>
+      <div className={cn("wmix-monitor-heading flex shrink-0 items-center justify-between gap-2 px-2 py-1 font-sans text-xs font-semibold tracking-wide", tone === "pgm" ? "bg-pgm text-pgm-foreground" : "bg-pvw text-pvw-foreground")}>
         <span>{title}</span><span className="truncate">{source}</span>
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden">
@@ -980,21 +981,21 @@ function MonitorBox({ title, tone, source, safe, children }: { title: string; to
 }
 function AddBtn({ icon: Icon, label, onClick }: { icon: typeof Camera; label: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="flex h-6 items-center gap-1 rounded-md border border-border bg-secondary px-2 text-[10px] font-semibold hover:bg-accent">
+    <Button variant="console" size="console" onClick={onClick} className="flex h-6 items-center gap-1 rounded-md border border-border bg-secondary px-2 text-[10px] font-semibold hover:bg-accent">
       <Icon className="h-3 w-3" />{label}
-    </button>
+    </Button>
   );
 }
 function DskRow({ n, label, on, onToggle, children }: { n: number; label: string; on: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
-    <div className={cn("flex min-w-0 flex-col gap-2 rounded-xl border p-2.5 transition-colors", on ? "border-pgm/50 bg-pgm/5" : "border-border/70 bg-panel-strong/40")}>
+    <div className={cn("flex min-w-0 flex-col gap-2 rounded-md border p-2.5 transition-colors", on ? "border-pgm/50 bg-pgm/5" : "border-border/70 bg-panel-strong/40")}>
       <div className="flex min-w-0 items-center gap-2">
         <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold tabular-nums", on ? "bg-pgm/15 text-pgm" : "bg-secondary text-muted-foreground")}>{n.toString().padStart(2, "0")}</span>
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-xs font-semibold text-foreground">{label}</span>
           <span className={cn("text-[10px]", on ? "text-pgm" : "text-muted-foreground")}>{on ? "No ar" : "Pronto para exibir"}</span>
         </div>
-        <button type="button" onClick={onToggle} aria-pressed={on} aria-label={`${on ? "Desativar" : "Exibir"} ${label}`} className={cn("h-7 min-w-16 shrink-0 rounded-lg border px-2 text-[10px] font-bold tracking-wide transition-colors", on ? "border-pgm bg-pgm text-pgm-foreground hover:opacity-90" : "border-border bg-secondary text-foreground hover:bg-accent")}>{on ? "NO AR" : "EXIBIR"}</button>
+        <Button variant="console" size="console" type="button" onClick={onToggle} aria-pressed={on} aria-label={`${on ? "Desativar" : "Exibir"} ${label}`} className={cn("h-7 min-w-16 shrink-0 rounded-lg border px-2 text-[10px] font-bold tracking-wide transition-colors", on ? "border-pgm bg-pgm text-pgm-foreground hover:opacity-90" : "border-border bg-secondary text-foreground hover:bg-accent")}>{on ? "NO AR" : "EXIBIR"}</Button>
       </div>
       <div className="min-w-0">{children}</div>
     </div>
@@ -1003,9 +1004,9 @@ function DskRow({ n, label, on, onToggle, children }: { n: number; label: string
 function ScoreBtn({ v, set }: { v: number; set: (v: number) => void }) {
   return (
     <div className="flex items-center gap-0.5">
-      <button className="h-6 w-5 rounded-md bg-secondary text-xs" onClick={() => set(Math.max(0, v - 1))}>−</button>
+      <Button variant="console" size="console" className="h-6 w-5 rounded-md bg-secondary text-xs" onClick={() => set(Math.max(0, v - 1))}>−</Button>
       <span className="w-5 text-center font-sans text-sm font-bold">{v}</span>
-      <button className="h-6 w-5 rounded-md bg-secondary text-xs" onClick={() => set(v + 1)}>+</button>
+      <Button variant="console" size="console" className="h-6 w-5 rounded-md bg-secondary text-xs" onClick={() => set(v + 1)}>+</Button>
     </div>
   );
 }

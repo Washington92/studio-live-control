@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { dbToMeter, faderToDb, formatDb, gainToDb } from "@/lib/broadcast/audio";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export interface Channel { fader: number; mute: boolean; solo: boolean; afv: boolean; a1: boolean; a2: boolean }
@@ -39,9 +40,9 @@ export function Meter({ level, className }: { level?: Level | undefined; classNa
 function Btn({ on, onClick, children, tone }: { on: boolean; onClick: () => void; children: React.ReactNode; tone: "mute" | "solo" | "afv" | "bus" }) {
   const toneCls = { mute: "bg-pgm text-pgm-foreground", solo: "bg-warn text-warn-foreground", afv: "bg-pvw text-pvw-foreground", bus: "bg-primary text-primary-foreground" }[tone];
   return (
-    <button type="button" aria-pressed={on} onClick={onClick} className={cn("h-6 w-full rounded-md border border-border/70 font-sans text-[10px] font-semibold tracking-wide transition-colors", on ? toneCls : "bg-secondary text-muted-foreground hover:text-foreground")}>
+    <Button variant="console" size="console" type="button" aria-pressed={on} onClick={onClick} className={cn("h-6 w-full rounded-md border border-border/70 font-sans text-[10px] font-semibold tracking-wide transition-colors", on ? toneCls : "bg-secondary text-muted-foreground hover:text-foreground")}>
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -51,8 +52,8 @@ export function Strip({ name, ch, level, onAir, onChange, isBus }: {
 }) {
   const db = faderToDb(ch.fader);
   return (
-    <div className={cn("flex w-[86px] shrink-0 flex-col gap-1.5 rounded-xl border bg-panel p-2 shadow-sm", onAir ? "border-pgm/80 bg-pgm/5" : "border-border/70", isBus && "bg-panel-strong/70")}>
-      <div className={cn("truncate rounded-lg px-1 py-1 text-center font-sans text-[11px] font-semibold", onAir ? "bg-pgm text-pgm-foreground" : "bg-secondary text-foreground")} title={name}>{name}</div>
+    <div className={cn("wmix-strip flex w-[86px] shrink-0 flex-col gap-1.5 rounded-md border bg-panel p-2 shadow-sm", onAir ? "border-pgm/80 bg-pgm/5" : "border-border/70", isBus && "bg-panel-strong/70")}>
+      <div className={cn("truncate rounded-md px-1 py-1 text-center font-sans text-[11px] font-semibold", onAir ? "bg-pgm text-pgm-foreground" : "bg-secondary text-foreground")} title={name}>{name}</div>
       <div className="flex min-h-0 flex-1 gap-2 py-1" style={{ minHeight: 110 }}>
         <div className="flex gap-[2px]"><Meter level={level} /><Meter level={level && { rms: level.rms * 0.96, peak: level.peak * 0.97 }} /></div>
         <div className="relative flex flex-1 justify-center">

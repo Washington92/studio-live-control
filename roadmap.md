@@ -1,0 +1,2 @@
+- [x] Refine console materials, typography and immediate press feedback without changing layout or broadcast values.
+- [x] Verify desktop/mobile controls and reduced-motion behavior; run audiovisual regression tests (26 passed).
