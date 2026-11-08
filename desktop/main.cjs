@@ -9,6 +9,13 @@ let pending = null;
 let nextId = 1;
 const queue = [];
 let window = null;
+const COMMAND_TIMEOUT_MS = 5000;
+function settle(request, error, value) {
+  if (!request) return;
+  clearTimeout(request.timer);
+  if (error) request.reject(error);
+  else request.resolve(value);
+}
 
 function notify(event) {
   if (window && !window.isDestroyed()) window.webContents.send('wmix:engine-event', event);
@@ -16,12 +23,22 @@ function notify(event) {
 function pump() {
   if (!ready || pending || !queue.length || !engine) return;
   pending = queue.shift();
-  engine.stdin.write(pending.command + '\n');
+  const request = pending;
+  request.timer = setTimeout(() => {
+    if (pending !== request) return;
+    pending = null;
+    settle(request, new Error('Engine command timeout'));
+    // A timed-out command may still return later; restart to avoid mismatched replies.
+    ready = false;
+    notify({ type: 'offline', reason: 'Engine command timeout' });
+    engine?.kill();
+  }, COMMAND_TIMEOUT_MS);
+  engine.stdin.write(request.command + '\n');
 }
 function failAll(reason) {
-  if (pending) pending.reject(new Error(reason));
+  if (pending) settle(pending, new Error(reason));
   pending = null;
-  while (queue.length) queue.shift().reject(new Error(reason));
+  while (queue.length) settle(queue.shift(), new Error(reason));
 }
 function startEngine() {
   const binary = process.env.WMIX_ENGINE_BINARY;
@@ -41,8 +58,8 @@ function startEngine() {
       if (pending) {
         const request = pending;
         pending = null;
-        if (line.startsWith('ERROR')) request.reject(new Error(line));
-        else request.resolve(line);
+        if (line.startsWith('ERROR')) settle(request, new Error(line));
+        else settle(request, null, line);
         pump();
       }
     }
@@ -62,7 +79,7 @@ function startEngine() {
 }
 function command(name) {
   if (!['STATUS', 'CUT'].includes(name)) return Promise.reject(new Error('Unsupported command'));
-  if (!engine) return Promise.reject(new Error('Engine offline'));
+  if (!engine || !ready) return Promise.reject(new Error('Engine offline'));
   if (queue.length >= 50) return Promise.reject(new Error('Command queue full'));
   return new Promise((resolve, reject) => {
     const request = { id: nextId++, command: name, resolve, reject };
