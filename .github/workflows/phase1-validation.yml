@@ -16,6 +16,7 @@ on:
       - 'engine/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'bun.lock'
       - '.github/workflows/phase1-validation.yml'
   workflow_dispatch:
 
@@ -28,15 +29,12 @@ jobs:
         with:
           node-version: '22'
       - uses: oven-sh/setup-bun@v2
-      - name: Install dependencies (Bun lock compatibility v2)
-        # Electron was added after bun.lock was generated. Keep installation
-        # unfrozen until a regenerated bun.lock is committed.
+      - name: Install dependencies (frozen Bun lockfile)
         shell: pwsh
         run: |
-          Write-Host "WMix workflow revision: bun-unfrozen-v2"
           Write-Host "Checked-out commit: $env:GITHUB_SHA"
-          bun install
-          if ($LASTEXITCODE -ne 0) { throw 'Bun dependency installation failed' }
+          bun install --frozen-lockfile
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen Bun dependency installation failed; synchronize bun.lock with package.json' }
       - name: Configure standalone native frame engine (without libobs)
         run: cmake -S engine -B engine/build -DWMIX_WITH_LIBOBS=OFF
       - name: Build standalone native frame engine
