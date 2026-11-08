@@ -32,3 +32,10 @@ Reference: [Emil Kowalski, Apple Design Skill](https://github.com/emilkowalski/s
 ## Scope of first application
 
 `src/styles.css` contains incremental accessibility and feedback rules. This first step intentionally avoids refactoring the studio layout or audiovisual engine. Validate on Windows and in the browser before considering further motion changes.
+
+## Fase 1 — precisão operacional (implementação incremental)
+
+- Atalhos globais agora ignoram repetição de tecla, modificadores de sistema, composição de texto e foco em campos, botões, sliders ou diálogos. Isso reduz CUTs involuntários durante edição e manipulação.
+- CUT e AUTO têm rótulos acessíveis descritivos.
+- Botões do mixer expõem `aria-pressed`; faders expõem o valor em decibéis via `aria-valuetext`.
+- **Ainda pendente:** estados explícitos de confirmação do motor libobs, sincronização de fontes nativas com entradas React, testes de latência de T-Bar e medição real de clipping. Nenhuma destas capacidades deve ser apresentada como concluída.
