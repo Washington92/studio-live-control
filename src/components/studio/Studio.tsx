@@ -497,6 +497,25 @@ export function Studio() {
             }
           }}>TESTAR FONTE OBS</Button>
         )}
+        {nativeStatus === "ready" && (
+          <Button variant="console" size="console" type="button" disabled={nativeBusy} className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent disabled:opacity-50" title="Executar CUT apenas nas cenas nativas de diagnóstico, sem trocar o Program web" onClick={async () => {
+            const bridge = nativeEngine();
+            if (!bridge) return;
+            setNativeBusy(true);
+            try {
+              const before = await bridge.command("STATUS");
+              const response = await bridge.command("CUT");
+              if (!response.startsWith("OK CUT ")) throw new Error(`CUT nativo não confirmado: ${response}`);
+              const after = await bridge.command("STATUS");
+              const onAirState = await bridge.command("PROGRAM_SOURCE_STATUS");
+              setNativeDiagnostic(`${before} · ${response} · ${after} · ${onAirState}`);
+            } catch (error) {
+              setNativeDiagnostic(error instanceof Error ? error.message : "Falha no CUT nativo");
+            } finally {
+              setNativeBusy(false);
+            }
+          }}>TESTAR CUT OBS</Button>
+        )}
         {nativeDiagnostic && <span role="status" className="max-w-[210px] truncate text-[10px] text-muted-foreground" title={nativeDiagnostic}>{nativeDiagnostic}</span>}
         {nativeStatus === "offline" && nativeEngine()?.restart && (
           <Button variant="console" size="console" type="button" className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent" title="Tentar reiniciar o processo nativo" onClick={async () => {
