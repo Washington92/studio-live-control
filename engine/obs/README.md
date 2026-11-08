@@ -85,3 +85,7 @@ No modo `--control`, o comando `ADD_TEST_SOURCE` cria uma única fonte `color_so
 O host Electron encaminha esse comando pelo IPC e o bridge TypeScript interpreta a resposta. **Ainda não há botão na UI para criar a fonte nem transporte de quadros para o Preview.** O comando pode ser testado via `window.wmixNative.command("ADD_TEST_SOURCE")` no desktop em desenvolvimento.
 
 Para homologar: compilar no Windows, confirmar plugins OBS, executar `ADD_TEST_SOURCE`, consultar `STATUS`, executar `CUT` e verificar o estado. Isso ainda não substitui a inspeção visual dos quadros.
+
+## Consulta de fonte nativa
+
+`SOURCE_STATUS` retorna `SOURCE_STATUS PRESENT WMix Test Color` ou `SOURCE_STATUS ABSENT WMix Test Color`, consultando diretamente o registro de fontes do libobs. O botão de diagnóstico `TESTAR FONTE OBS` agora executa `ADD_TEST_SOURCE` seguido de `SOURCE_STATUS`, mostrando as duas respostas. Isso comprova apenas presença lógica da fonte, **não** captura, renderização, exibição no Preview ou Tally do Program. Requer compilação e teste Windows para validação.
