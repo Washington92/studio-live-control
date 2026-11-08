@@ -83,6 +83,13 @@ jobs:
           Copy-Item desktop/dist-renderer $appDir -Recurse
           Set-Content -Path (Join-Path $appDir 'package.json') -Encoding utf8 -Value '{"name":"wmix-desktop","version":"0.1.0","private":true,"main":"main.cjs"}'
           if (!(Test-Path (Join-Path $appDir 'dist-renderer/index.html'))) { throw 'Offline renderer missing' }
+          if (!(Test-Path (Join-Path $appDir 'preload.cjs'))) { throw 'Electron preload missing' }
+          if (!(Test-Path (Join-Path $appDir 'main.cjs'))) { throw 'Electron main entry missing' }
+          $html = Get-Content (Join-Path $appDir 'dist-renderer/index.html') -Raw
+          if ($html -notmatch 'assets/') { throw 'Desktop renderer has no bundled assets' }
+          $assets = @(Get-ChildItem (Join-Path $appDir 'dist-renderer/assets') -File -ErrorAction Stop)
+          if (@($assets | Where-Object { $_.Extension -eq '.js' }).Count -eq 0) { throw 'Desktop JS bundle missing' }
+          if (@($assets | Where-Object { $_.Extension -eq '.css' }).Count -eq 0) { throw 'Desktop CSS bundle missing' }
           if (!(Test-Path (Join-Path $destination 'WMix.exe'))) { throw 'WMix executable missing' }
           Compress-Archive -Path (Join-Path $destination '*') -DestinationPath 'WMix-Desktop-Portable-Windows-x64.zip' -Force
       - name: Upload portable WMix desktop build
