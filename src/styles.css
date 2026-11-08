@@ -232,3 +232,52 @@
   }
   .wmix-dock-panel > div:last-of-type { min-height: 0 !important; }
 }
+
+/* WMix interaction principles inspired by Emil Kowalski's Apple Design skill.
+   Feedback is immediate; live-production controls never bounce or lag. */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled) {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+button:not(:disabled):active {
+  filter: brightness(1.12);
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+/* Direct manipulation: no transform or easing on fader / T-bar thumbs. */
+.tbar, .fader, .input-mini-fader {
+  touch-action: none;
+  transition: none !important;
+}
+.tbar::-webkit-slider-thumb,
+.fader::-webkit-slider-thumb,
+.input-mini-fader::-webkit-slider-thumb {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wmix-dock-panel,
+  .wmix-dock-panel *,
+  button,
+  [role="dialog"] {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  [role="dialog"], [data-radix-popper-content-wrapper] {
+    backdrop-filter: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline-width: 3px;
+  }
+}
