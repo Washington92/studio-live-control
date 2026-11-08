@@ -30,12 +30,21 @@ class DesktopErrorBoundary extends React.Component<
   }
 }
 
-function DesktopStudio() {
+function StudioReadyMarker() {
   useEffect(() => {
     document.documentElement.dataset.wmixStudioReady = "true";
     return () => { delete document.documentElement.dataset.wmixStudioReady; };
   }, []);
-  return <React.Suspense fallback={<div role="status" style={{ padding: 24 }}>Inicializando WMix Studio…</div>}><Studio /></React.Suspense>;
+  return null;
+}
+
+function DesktopStudio() {
+  return (
+    <React.Suspense fallback={<div role="status" style={{ padding: 24 }}>Inicializando WMix Studio…</div>}>
+      <Studio />
+      <StudioReadyMarker />
+    </React.Suspense>
+  );
 }
 
 const root = document.getElementById("root");
