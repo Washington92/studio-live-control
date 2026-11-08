@@ -33,3 +33,14 @@ O nome e o local do pacote CMake dependem da distribuição/compilação do OBS.
 ## Licenciamento
 
 OBS Studio/libobs é distribuído sob GPL-2.0-or-later. Antes de distribuir binários do WMix com libobs, avaliar as obrigações da GPL para o conjunto integrado, avisos de copyright, código-fonte correspondente e componentes de terceiros. Não assumir que IPC elimina obrigações de licença.
+
+## Teste Preview / Program
+
+Após compilar com `WMIX_WITH_LIBOBS=ON`, execute:
+
+```powershell
+.\engine\build\obs\Release\wmix-obs-smoke.exe --dual
+ctest --test-dir engine/build -C Release --output-on-failure
+```
+
+`--dual` inicializa vídeo/áudio, cria cenas separadas de Preview e Program e conecta somente Program ao canal de saída 0. **Não exibe imagens nem testa transições ou fontes reais.** O teste exige DLLs do OBS, plugins gráficos e uma GPU compatível no ambiente de execução.
