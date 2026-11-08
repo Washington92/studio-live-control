@@ -3,6 +3,25 @@ const { spawn } = require('node:child_process');
 const { createInterface } = require('node:readline');
 const path = require('node:path');
 
+const fs = require('node:fs');
+const { dialog } = require('electron');
+
+function configuredEnginePath() {
+  if (process.env.WMIX_ENGINE_BINARY) return path.resolve(process.env.WMIX_ENGINE_BINARY);
+  try {
+    const settings = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'native-engine.json'), 'utf8'));
+    if (typeof settings.binary === 'string' && settings.binary.toLowerCase().endsWith('.exe')) return settings.binary;
+  } catch {
+    // First run or missing settings: no native engine selected yet.
+  }
+  return null;
+}
+function saveEnginePath(binary) {
+  const target = path.join(app.getPath('userData'), 'native-engine.json');
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, JSON.stringify({ binary }, null, 2), { mode: 0o600 });
+}
+
 let engine = null;
 let ready = false;
 let pending = null;
@@ -43,7 +62,7 @@ function failAll(reason) {
   while (queue.length) settle(queue.shift(), new Error(reason));
 }
 function startEngine() {
-  const binary = process.env.WMIX_ENGINE_BINARY;
+  const binary = configuredEnginePath();
   if (!binary) {
     notify({ type: 'offline', reason: 'WMIX_ENGINE_BINARY not configured' });
     return;
@@ -109,9 +128,27 @@ app.whenReady().then(() => {
   ipcMain.handle('wmix:engine-status', () => ({ ready }));
   ipcMain.handle('wmix:engine-restart', () => {
     if (engine) return { restarted: false, reason: 'Engine process still running' };
-    if (!process.env.WMIX_ENGINE_BINARY) return { restarted: false, reason: 'WMIX_ENGINE_BINARY not configured' };
+    if (!configuredEnginePath()) return { restarted: false, reason: 'Selecione o executável do motor OBS' };
     startEngine();
     return { restarted: true };
+  });
+  ipcMain.handle('wmix:engine-select', async () => {
+    if (engine) return { selected: false, reason: 'Feche o motor em execução antes de trocar o executável' };
+    const result = await dialog.showOpenDialog(window, {
+      title: 'Selecionar motor WMix baseado em libobs',
+      properties: ['openFile'],
+      filters: [{ name: 'Executável WMix OBS', extensions: ['exe'] }],
+    });
+    if (result.canceled || !result.filePaths.length) return { selected: false, reason: 'Seleção cancelada' };
+    const binary = path.resolve(result.filePaths[0]);
+    // A standalone frame generator is not a libobs engine.
+    if (path.basename(binary).toLowerCase() !== 'wmix-obs-smoke.exe') {
+      return { selected: false, reason: 'Selecione wmix-obs-smoke.exe; o gerador wmix-engine.exe não implementa o protocolo OBS' };
+    }
+    if (!fs.existsSync(binary)) return { selected: false, reason: 'Executável não encontrado' };
+    saveEnginePath(binary);
+    startEngine();
+    return { selected: true };
   });
   window = new BrowserWindow({
     width: 1440, height: 900,
