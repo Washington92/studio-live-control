@@ -540,6 +540,22 @@ export function Studio() {
           }}>VÍDEO OBS</Button>
         )}
         {nativeDiagnostic && <span role="status" className="max-w-[210px] truncate text-[10px] text-muted-foreground" title={nativeDiagnostic}>{nativeDiagnostic}</span>}
+        {nativeStatus === "offline" && nativeEngine()?.select && (
+          <Button variant="console" size="console" type="button" disabled={nativeBusy} className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent disabled:opacity-50" title="Selecionar motor libobs compilado (wmix-obs-smoke.exe)" onClick={async () => {
+            const bridge = nativeEngine();
+            if (!bridge?.select) return;
+            setNativeBusy(true);
+            try {
+              const result = await bridge.select();
+              if (!result.selected && result.reason !== "Seleção cancelada") setNativeDiagnostic(result.reason ?? "Motor não selecionado");
+              else if (result.selected) setNativeDiagnostic("Motor selecionado. Aguardando inicialização do libobs...");
+            } catch (error) {
+              setNativeDiagnostic(error instanceof Error ? error.message : "Falha ao selecionar motor");
+            } finally {
+              setNativeBusy(false);
+            }
+          }}>SELECIONAR OBS</Button>
+        )}
         {nativeStatus === "offline" && nativeEngine()?.restart && (
           <Button variant="console" size="console" type="button" className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent" title="Tentar reiniciar o processo nativo" onClick={async () => {
             try {
