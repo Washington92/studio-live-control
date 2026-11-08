@@ -55,8 +55,24 @@ int main(int argc, char** argv) {
           // Use the full plugins directory; libobs expands %module%.
           obs_add_module_path("../../obs-plugins/64bit",
                               "../../data/obs-plugins/%module%");
-          // Initialize video/audio before loading plugins, as in OBS startup.
-          obs_load_all_modules();
+          // OBS 33 marks obs_load_all_modules() as deprecated. Enumerate
+          // runtime modules through the supported API and load actual plugins.
+          const bool core_loaded = obs_load_core_modules();
+          if (!core_loaded) {
+            std::cerr << "WMix: aviso ao carregar modulos centrais OBS.\\n";
+          }
+          obs_find_modules2([](void*, const obs_module_info2* module) {
+            if (module->type != OBS_MODULE_TYPE_PLUGIN &&
+                module->type != OBS_MODULE_TYPE_LEGACY_PLUGIN) return;
+            obs_runtime_module_info info{};
+            info.path_info.binary = module->bin_path;
+            info.path_info.data = module->data_path;
+            info.type = module->type;
+            info.name = module->name;
+            obs_module_failure_info failures{};
+            obs_load_plugins(&info, &failures);
+            obs_module_failure_info_free(&failures);
+          }, nullptr);
           obs_log_loaded_modules();
           obs_post_load_modules();
         }
