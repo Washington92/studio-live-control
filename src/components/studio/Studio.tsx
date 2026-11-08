@@ -5,6 +5,7 @@ import { dbToGain, faderToDb, smpte } from "@/lib/broadcast/audio";
 import { ProgramOutputEngine } from "@/lib/broadcast/program-output";
 import { WhipPublisher } from "@/lib/broadcast/whip-output";
 import { cn } from "@/lib/utils";
+import { nativeEngine } from "@/lib/broadcast/native-engine";
 import { Meter, Strip, type Channel, type Level } from "./Mixer";
 
 const TRANSITIONS: TransitionType[] = ["MIX", "FADE", "SLIDE", "WIPE", "STINGER", "PUSH", "ZOOM", "BLUR", "CIRCLE WIPE", "FLIP"];
@@ -99,6 +100,20 @@ export function Studio() {
   const [rec, setRec] = useState<number | null>(null);
   const [tele, setTele] = useState({ fps: 0, render: 0, mem: 0, load: 0, dropped: 0 });
   const [now, setNow] = useState(0);
+  const [nativeStatus, setNativeStatus] = useState<"web" | "offline" | "ready">("web");
+  useEffect(() => {
+    const bridge = nativeEngine();
+    if (!bridge) return;
+    let active = true;
+    bridge.status().then(({ ready }) => {
+      if (active) setNativeStatus(ready ? "ready" : "offline");
+    }).catch(() => { if (active) setNativeStatus("offline"); });
+    const unsubscribe = bridge.onEvent((event) => {
+      if (active) setNativeStatus(event.type === "ready" ? "ready" : "offline");
+    });
+    return () => { active = false; unsubscribe(); };
+  }, []);
+
   const [lt, setLt] = useState({ name: "Ana Ribeiro", title: "Diretora de Operações" });
 
   const pvwRef = useRef<HTMLCanvasElement>(null);
@@ -459,6 +474,9 @@ export function Studio() {
         </div>
 
         <div className="hidden flex-1 sm:block" />
+        <span role="status" aria-live="polite" title="Estado do motor nativo; o compositor web continua independente" className="rounded-md border border-border bg-secondary px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+          {nativeStatus === "ready" ? "OBS: CONECTADO" : nativeStatus === "offline" ? "OBS: OFFLINE" : "MOTOR: WEB"}
+        </span>
         <Timer label="REC" since={rec} now={now} tone="pgm" />
         <Timer label="LIVE" since={live} now={now} tone="pgm" />
         <button onClick={toggleRec} className={cn("flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-bold tracking-wider", rec ? "border-pgm bg-pgm text-pgm-foreground" : "border-border bg-secondary hover:bg-accent")}>
