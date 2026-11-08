@@ -18,3 +18,6 @@ add_test(NAME wmix_obs_av COMMAND wmix-obs-smoke --av)
 add_test(NAME wmix_obs_dual_scene COMMAND wmix-obs-smoke --dual)
 
 add_test(NAME wmix_obs_cut COMMAND wmix-obs-smoke --switch)
+
+# Requires the OBS color-source plugin to be discoverable at runtime.
+add_test(NAME wmix_obs_test_source COMMAND wmix-obs-smoke --sources)
