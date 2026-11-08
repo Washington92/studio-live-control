@@ -12,3 +12,7 @@ elseif(TARGET libobs)
 else()
   message(FATAL_ERROR "libobs found, but no supported CMake target exported; inspect installed OBS CMake exports.")
 endif()
+
+add_test(NAME wmix_obs_startup COMMAND wmix-obs-smoke)
+add_test(NAME wmix_obs_av COMMAND wmix-obs-smoke --av)
+add_test(NAME wmix_obs_dual_scene COMMAND wmix-obs-smoke --dual)
