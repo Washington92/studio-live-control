@@ -49,3 +49,19 @@ Se usar Codex, conecte o projeto pelo fluxo oficial do serviço; configure-o par
 ## Execução orientada a Issues
 
 Cada Issue deve conter: problema observado, arquivos envolvidos, entregável exato, testes necessários, critérios de aceite e riscos. O agente seleciona somente tarefas desbloqueadas. Requer aprovação explícita antes de integrar na `main`.
+
+
+## Ativação prática do Codex Cloud (ação do proprietário)
+
+1. Revise e integre o PR de preparação `#5` para que o `AGENTS.md` completo fique disponível na `main`.
+2. No ChatGPT web ou desktop, abra **Work in > Cloud > Select environment > Create environment**.
+3. Conecte a sua conta GitHub quando solicitado e selecione `Washington92/studio-live-control`.
+4. Deixe o Codex inspecionar o projeto. Configure Node 22, Bun e as dependências web no ambiente. A etapa Windows NSIS deve ser verificada no GitHub Actions (`windows-latest`), não simulada no Linux.
+5. Revise o relatório de setup, publique o ambiente e crie uma nova tarefa apontando para a Issue `#3`.
+6. Solicite ao agente uma branch `agent/3-bun-lock` e PR para `main`; nenhum auto-merge.
+
+**Primeiro prompt sugerido ao Codex:**
+
+> Trabalhe no repositório Washington92/studio-live-control. Leia AGENTS.md e a Issue #3. Corrija a divergência entre bun.lock e package.json após a adição do Electron. Rode os testes disponíveis, valide que bun install --frozen-lockfile funciona em checkout limpo e ajuste o workflow para voltar a usar frozen somente se comprovado. Não altere o layout aprovado do WMix nem o motor de vídeo. Crie uma branch agent/3-bun-lock e abra um draft PR para revisão com evidências dos testes. Não faça merge, não exponha segredos e não alegue compilação Windows local se a validação só ocorrer pelo CI.
+
+A publicação do ambiente e o início da tarefa exigem conexão e aprovação da conta do proprietário. Este repositório não contém credenciais nem dispara Codex sozinho.
