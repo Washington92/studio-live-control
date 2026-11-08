@@ -103,6 +103,9 @@ jobs:
           New-Item -ItemType Directory -Force -Path $appDir | Out-Null
           Copy-Item desktop/main.cjs $appDir
           Copy-Item desktop/preload.cjs $appDir
+          New-Item -ItemType Directory -Force -Path (Join-Path $appDir 'assets') | Out-Null
+          Copy-Item desktop/assets/wmix-icon.png (Join-Path $appDir 'assets/wmix-icon.png')
+          Copy-Item desktop/assets/wmix-icon.png (Join-Path $appDir 'dist-renderer/assets/wmix-icon.png')
           Copy-Item desktop/dist-renderer $appDir -Recurse
           Set-Content -Path (Join-Path $appDir 'package.json') -Encoding utf8 -Value '{"name":"wmix-desktop","version":"0.1.0","private":true,"main":"main.cjs"}'
           if (!(Test-Path (Join-Path $appDir 'dist-renderer/index.html'))) { throw 'Offline renderer missing' }
@@ -114,6 +117,24 @@ jobs:
           if (@($assets | Where-Object { $_.Extension -eq '.js' }).Count -eq 0) { throw 'Desktop JS bundle missing' }
           if (@($assets | Where-Object { $_.Extension -eq '.css' }).Count -eq 0) { throw 'Desktop CSS bundle missing' }
           if (!(Test-Path (Join-Path $destination 'WMix.exe'))) { throw 'WMix executable missing' }
+          # Brand the PE resources; renaming electron.exe alone preserves Electron's icon.
+          python -m pip install --disable-pip-version-check Pillow
+          if ($LASTEXITCODE -ne 0) { throw 'Pillow install failed' }
+          $icon = Join-Path $env:RUNNER_TEMP 'wmix.ico'
+          python -c "from PIL import Image; Image.open('desktop/assets/wmix-icon.png').convert('RGBA').save(r'$icon', format='ICO', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128)])"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $icon)) { throw 'Windows icon generation failed' }
+          $brandDir = Join-Path $env:RUNNER_TEMP 'wmix-brand-tools'
+          New-Item -ItemType Directory -Force -Path $brandDir | Out-Null
+          Push-Location $brandDir
+          try {
+            npm install --no-save --no-package-lock --no-audit --no-fund rcedit@5.0.2
+            if ($LASTEXITCODE -ne 0) { throw 'Windows resource editor installation failed' }
+            node --input-type=module -e "import { rcedit } from 'rcedit'; await rcedit(process.argv[1], { icon: process.argv[2], 'version-string': { ProductName: 'WMix Studio', FileDescription: 'WMix Studio' } });" (Join-Path $destination 'WMix.exe') $icon
+            if ($LASTEXITCODE -ne 0) { throw 'Windows executable icon branding failed' }
+          } finally {
+            Pop-Location
+          }
+          if (!(Test-Path (Join-Path $appDir 'assets/wmix-icon.png'))) { throw 'WMix brand icon missing from package' }
           Compress-Archive -Path (Join-Path $destination '*') -DestinationPath 'WMix-Desktop-Portable-Windows-x64.zip' -Force
       - name: Smoke-test actual Windows Electron renderer
         shell: pwsh
