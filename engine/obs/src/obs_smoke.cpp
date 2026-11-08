@@ -5,11 +5,12 @@
 int main(int argc, char** argv) {
   const bool initialize_scene = argc == 2 && std::string(argv[1]) == "--scene";
   const bool initialize_control = argc == 2 && std::string(argv[1]) == "--control";
+  const bool initialize_sources = argc == 2 && std::string(argv[1]) == "--sources";
   const bool initialize_switch = argc == 2 && std::string(argv[1]) == "--switch";
   const bool initialize_dual = argc == 2 && std::string(argv[1]) == "--dual";
-  const bool initialize_av = initialize_scene || initialize_dual || initialize_switch || initialize_control || (argc == 2 && std::string(argv[1]) == "--av");
+  const bool initialize_av = initialize_scene || initialize_dual || initialize_switch || initialize_control || initialize_sources || (argc == 2 && std::string(argv[1]) == "--av");
   if (argc > 1 && !initialize_av) {
-    std::cerr << "Uso: wmix-obs-smoke [--av | --scene | --dual | --switch | --control]\n";
+    std::cerr << "Uso: wmix-obs-smoke [--av | --scene | --dual | --switch | --control | --sources]\n";
     return 2;
   }
 
@@ -48,9 +49,9 @@ int main(int argc, char** argv) {
         result = 1;
       } else {
         std::cout << "WMix: libobs video 1280x720@30 e audio 48kHz inicializados.\n";
-        if (initialize_scene || initialize_dual || initialize_switch || initialize_control) {
+        if (initialize_scene || initialize_dual || initialize_switch || initialize_control || initialize_sources) {
           obs_scene_t* program = obs_scene_create("WMix Program");
-          obs_scene_t* preview = (initialize_dual || initialize_switch || initialize_control) ? obs_scene_create("WMix Preview") : nullptr;
+          obs_scene_t* preview = (initialize_dual || initialize_switch || initialize_control || initialize_sources) ? obs_scene_create("WMix Preview") : nullptr;
           if (!program || ((initialize_dual || initialize_switch || initialize_control) && !preview)) {
             std::cerr << "WMix: falha ao criar cenas.\n";
             result = 1;
@@ -65,6 +66,26 @@ int main(int argc, char** argv) {
                 std::cerr << "WMix: Preview e Program nao sao independentes.\n";
                 result = 1;
               }
+            }
+          }
+          if (initialize_sources && program && preview && result == 0) {
+            // A built-in libobs color source is a reproducible first input.
+            // It proves source creation and scene attachment, not camera capture.
+            obs_load_all_modules();
+            obs_log_loaded_modules();
+            obs_source_t* source = obs_source_create("color_source", "WMix Test Color", nullptr, nullptr);
+            if (!source) {
+              std::cerr << "WMix: color_source unavailable (check OBS plugins).\\n";
+              result = 1;
+            } else {
+              obs_sceneitem_t* item = obs_scene_add(preview, source);
+              if (!item) {
+                std::cerr << "WMix: failed to attach source to Preview.\\n";
+                result = 1;
+              } else {
+                std::cout << "WMix: test source attached to Preview.\\n";
+              }
+              obs_source_release(source);
             }
           }
           if (initialize_switch && program && preview && result == 0) {
