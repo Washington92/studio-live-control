@@ -84,3 +84,16 @@ describe("native Program scene routing", () => {
     });
   });
 });
+
+describe("native video diagnostics", () => {
+  it("parses libobs output resolution and rational frame rate", () => {
+    expect(parseNativeControlResponse("VIDEO_STATUS 1280x720 30000/1001")).toEqual({
+      type: "video-status", width: 1280, height: 720, fpsNum: 30000, fpsDen: 1001,
+    });
+  });
+  it("rejects invalid zero frame-rate denominator", () => {
+    expect(parseNativeControlResponse("VIDEO_STATUS 1280x720 30/0")).toEqual({
+      type: "error", message: "Resposta nativa desconhecida",
+    });
+  });
+});
