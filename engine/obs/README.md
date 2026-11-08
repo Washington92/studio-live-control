@@ -121,3 +121,9 @@ Com o desktop Electron conectado, `TESTAR FONTE OBS` cria a fonte e consulta sua
 `TALLY_STATUS` consulta `obs_get_output_source(0)` e retorna `TALLY_STATUS PROGRAM`, `TALLY_STATUS PREVIEW` ou `TALLY_STATUS UNKNOWN`. A resposta representa a cena conectada à saída do libobs, independentemente do estado lógico mantido pelo loop de controle. `TESTAR CUT OBS` consulta esse Tally depois de executar CUT.
 
 **Limites:** ainda não existe correspondência entre cenas/fontes nativas e IDs de entradas React; portanto o Tally não deve alterar os indicadores de câmera da UI. O teste precisa ser executado em Windows com libobs compilado.
+
+## Estado efetivo do CUT
+
+`STATUS` agora consulta diretamente a cena conectada ao canal 0 do libobs, assim como `TALLY_STATUS`. O comando `CUT` calcula o destino a partir desse estado efetivo e verifica a cena após a troca. Se o canal 0 não estiver associado a uma das duas cenas controladas, retorna `ERROR CUT UNKNOWN` sem sobrescrever uma saída desconhecida. Em caso de falha, informa a cena efetivamente observada, em vez de reutilizar um estado lógico possivelmente desatualizado.
+
+Essa proteção evita divergência entre o estado do protocolo e a saída real, mas não substitui os testes de runtime Windows nem o mapeamento de entradas da interface.
