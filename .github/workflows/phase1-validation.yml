@@ -105,8 +105,21 @@ jobs:
           if (!(Test-Path $exe)) { throw 'Packaged WMix.exe not found' }
           $env:WMIX_SMOKE_TEST = '1'
           $env:WMIX_ENGINE_BINARY = ''
-          $process = Start-Process -FilePath $exe -PassThru -Wait
+          $env:WMIX_SMOKE_SCREENSHOT = Join-Path $env:RUNNER_TEMP 'wmix-desktop-smoke.png'
+          $process = Start-Process -FilePath $exe -PassThru
+          if (!$process.WaitForExit(60000)) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            throw 'WMix Windows smoke test exceeded 60 seconds'
+          }
           if ($process.ExitCode -ne 0) { throw "WMix React mount smoke test failed: exit $($process.ExitCode)" }
+          if (!(Test-Path $env:WMIX_SMOKE_SCREENSHOT)) { throw 'WMix screenshot missing after successful smoke test' }
+      - name: Upload Windows desktop smoke screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: WMix-Windows-Desktop-Screenshot
+          path: ${{ runner.temp }}/wmix-desktop-smoke.png
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload portable WMix desktop build
         uses: actions/upload-artifact@v4
         with:
