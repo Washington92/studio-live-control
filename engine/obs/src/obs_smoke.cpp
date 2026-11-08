@@ -50,6 +50,11 @@ int main(int argc, char** argv) {
       } else {
         std::cout << "WMix: libobs video 1280x720@30 e audio 48kHz inicializados.\n";
         if (initialize_sources || initialize_control) {
+          // Electron launches us from native/obs/bin/64bit. These paths
+          // point to the adjacent official OBS runtime/plugin directories.
+          // Use the full plugins directory; libobs expands %module%.
+          obs_add_module_path("../../obs-plugins/64bit/%module%.dll",
+                              "../../data/obs-plugins/%module%");
           // Initialize video/audio before loading plugins, as in OBS startup.
           obs_load_all_modules();
           obs_log_loaded_modules();
