@@ -86,7 +86,12 @@ o build. A instalação requer privilégios administrativos por padrão e usa
 2. Selecione a execução **verde** da branch `main`.
 3. Em **Artifacts**, baixe `WMix-Setup-Windows-x64` e extraia o ZIP que o
    próprio GitHub fornece como envelope de download.
-4. Execute **WMix-Setup-Windows-x64.exe** e siga o assistente.
+4. Antes de instalar, confira a integridade: o artefato contém também
+   `WMix-Setup-Windows-x64.sha256`. No PowerShell, na pasta dos arquivos,
+   execute `(Get-FileHash .\\WMix-Setup-Windows-x64.exe -Algorithm SHA256).Hash`
+   e compare o resultado com a primeira sequência hexadecimal do arquivo
+   `.sha256`. Se não coincidir, não execute o instalador.
+5. Execute **WMix-Setup-Windows-x64.exe** e siga o assistente.
 
 O CI verifica o compositor React, gera o setup e executa um teste de
 instalação e desinstalação silenciosas no runner Windows. Isso **não** valida
