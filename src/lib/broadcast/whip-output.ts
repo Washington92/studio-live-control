@@ -80,7 +80,7 @@ export class WhipPublisher {
       await pc.setLocalDescription(offer);
       await waitForIceGathering(pc);
       const headers: Record<string, string> = { "Content-Type": "application/sdp" };
-      if (this.token) headers.Authorization = `Bearer ${this.token}`;
+      if (this.token) headers["Authorization"] = `Bearer ${this.token}`;
       const response = await fetch(endpoint, {
         method: "POST", headers, body: pc.localDescription?.sdp ?? offer.sdp ?? "",
         credentials: "omit", redirect: "error",
@@ -112,7 +112,7 @@ export class WhipPublisher {
     pc?.close();
     if (session) {
       const headers: Record<string, string> = {};
-      if (token) headers.Authorization = `Bearer ${token}`;
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         await fetch(session, { method: "DELETE", headers, credentials: "omit", redirect: "error" });
       } catch { /* Network loss may prevent DELETE; peer connection is already closed. */ }

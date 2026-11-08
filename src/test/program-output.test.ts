@@ -30,20 +30,24 @@ describe("Program output audio routing", () => {
 
   it("respects mute and solo", () => {
     const mix = baseMix();
-    mix.channels.screen!.solo = true;
+    const screen = mix.channels["screen"];
+    if (!screen) throw new Error("Missing screen channel");
+    screen.solo = true;
     expect(sourceOutputGain(mix, "camera")).toBe(0);
     expect(sourceOutputGain(mix, "screen")).toBe(0);
-    mix.channels.screen!.afv = false;
+    screen.afv = false;
     expect(sourceOutputGain(mix, "screen")).toBe(1);
-    mix.channels.screen!.mute = true;
+    screen.mute = true;
     expect(sourceOutputGain(mix, "screen")).toBe(0);
   });
 
   it("can keep non-AFV sources audible outside Program", () => {
     const mix = baseMix();
-    mix.channels.screen!.afv = false;
+    const screen = mix.channels["screen"];
+    if (!screen) throw new Error("Missing screen channel");
+    screen.afv = false;
     expect(sourceOutputGain(mix, "screen")).toBe(1);
-    mix.channels.screen!.fader = 0;
+    screen.fader = 0;
     expect(sourceOutputGain(mix, "screen")).toBe(0);
   });
 });
