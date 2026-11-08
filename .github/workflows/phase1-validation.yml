@@ -65,6 +65,33 @@ jobs:
         run: npm test -- --run
       - name: TypeScript and frontend build
         run: npm run build
+      - name: Build standalone offline WMix desktop renderer
+        run: bunx vite build --config desktop/vite.config.ts
+      - name: Package portable WMix Electron for Windows
+        shell: pwsh
+        run: |
+          $source = 'node_modules/electron/dist'
+          $destination = Join-Path $env:RUNNER_TEMP 'WMix-Desktop-Portable'
+          if (!(Test-Path (Join-Path $source 'electron.exe'))) { throw 'Electron Windows executable missing' }
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item (Join-Path $source '*') $destination -Recurse -Force
+          Rename-Item (Join-Path $destination 'electron.exe') 'WMix.exe'
+          $appDir = Join-Path $destination 'resources/app'
+          New-Item -ItemType Directory -Force -Path $appDir | Out-Null
+          Copy-Item desktop/main.cjs $appDir
+          Copy-Item desktop/preload.cjs $appDir
+          Copy-Item desktop/dist-renderer $appDir -Recurse
+          Set-Content -Path (Join-Path $appDir 'package.json') -Encoding utf8 -Value '{"name":"wmix-desktop","version":"0.1.0","private":true,"main":"main.cjs"}'
+          if (!(Test-Path (Join-Path $appDir 'dist-renderer/index.html'))) { throw 'Offline renderer missing' }
+          if (!(Test-Path (Join-Path $destination 'WMix.exe'))) { throw 'WMix executable missing' }
+          Compress-Archive -Path (Join-Path $destination '*') -DestinationPath 'WMix-Desktop-Portable-Windows-x64.zip' -Force
+      - name: Upload portable WMix desktop build
+        uses: actions/upload-artifact@v4
+        with:
+          name: WMix-Desktop-Portable-Windows-x64
+          path: WMix-Desktop-Portable-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 30
       - name: Electron host syntax
         run: node --check desktop/main.cjs
       - name: Electron preload syntax
