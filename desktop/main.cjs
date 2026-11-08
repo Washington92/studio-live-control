@@ -3,7 +3,7 @@ const { spawn } = require('node:child_process');
 const { createInterface } = require('node:readline');
 const path = require('node:path');
 
-// Consistent Windows app name and taskbar grouping for the branded portable build.
+// Consistent Windows app name and taskbar grouping for the installed desktop build.
 app.setName('WMix Studio');
 if (process.platform === 'win32') app.setAppUserModelId('com.wmix.studio');
 
@@ -12,6 +12,10 @@ const { dialog } = require('electron');
 
 function configuredEnginePath() {
   if (process.env.WMIX_ENGINE_BINARY) return path.resolve(process.env.WMIX_ENGINE_BINARY);
+  // The Windows installer will bundle the real native libobs runtime alongside
+  // the Electron app. Never mistake wmix-engine.exe (test pattern) for libobs.
+  const bundled = path.join(__dirname, 'native', 'obs', 'bin', '64bit', 'wmix-obs-smoke.exe');
+  if (fs.existsSync(bundled)) return bundled;
   try {
     const settings = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'native-engine.json'), 'utf8'));
     if (typeof settings.binary === 'string' && settings.binary.toLowerCase().endsWith('.exe')) return settings.binary;
@@ -68,12 +72,15 @@ function failAll(reason) {
 function startEngine() {
   const binary = configuredEnginePath();
   if (!binary) {
-    notify({ type: 'offline', reason: 'Motor libobs não configurado. Use SELECIONAR OBS para escolher wmix-obs-smoke.exe.' });
+    notify({ type: 'offline', reason: 'Motor libobs não instalado neste pacote. Esta versão precisa incluir native/obs/bin/64bit/wmix-obs-smoke.exe ou use SELECIONAR OBS.' });
     return;
   }
   if (engine) return;
   ready = false;
+  // libobs discovers its renderer DLLs, plugins and data relative to its
+  // working directory; the packaged engine lives in native/obs/bin/64bit.
   engine = spawn(path.resolve(binary), ['--control'], {
+    cwd: path.dirname(path.resolve(binary)),
     stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
   });
   const processRef = engine;
