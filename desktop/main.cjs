@@ -125,6 +125,10 @@ app.whenReady().then(() => {
   window.webContents.on('did-fail-load', (_event, code, description, validatedURL, isMainFrame) => {
     if (!isMainFrame) return;
     console.error('[WMix Desktop] Renderer load failed:', code, description, validatedURL);
+    if (process.env.WMIX_SMOKE_TEST === '1') {
+      app.exit(5);
+      return;
+    }
     const { dialog } = require('electron');
     dialog.showErrorBox('WMix — Falha ao abrir a interface',
       'Não foi possível carregar a interface local do WMix.\\n' +
