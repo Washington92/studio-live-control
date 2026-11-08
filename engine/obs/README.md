@@ -48,3 +48,21 @@ ctest --test-dir engine/build -C Release --output-on-failure
 ## Corte nativo experimental
 
 `wmix-obs-smoke --switch` cria duas cenas e executa um **CUT** alterando a fonte do canal de saída Program para a cena Preview; confirma a troca consultando o libobs. O teste ainda usa cenas vazias, não renderiza conteúdo nem conecta botões da interface. Execute `ctest --test-dir engine/build -C Release --output-on-failure` após compilar e configurar o runtime do OBS.
+
+## Controle interativo do motor (experimental)
+
+Depois de compilar e disponibilizar as DLLs do OBS:
+
+```powershell
+.\engine\build\obs\Release\wmix-obs-smoke.exe --control
+```
+
+O processo responde `READY WMIX_OBS_CONTROL_V1` e aceita uma instrução por linha em stdin:
+
+| Comando | Resposta | Efeito |
+|---|---|---|
+| `STATUS` | `STATUS PROGRAM` ou `STATUS PREVIEW` | Consulta qual cena está no canal 0 |
+| `CUT` | `OK CUT PREVIEW` ou `OK CUT PROGRAM` | Alterna a cena ligada ao Program |
+| `QUIT` | `BYE` | Encerra o processo |
+
+Comando desconhecido recebe `ERROR UNKNOWN_COMMAND`. Esse é um protocolo de texto para testes locais; ainda não existe ponte com o frontend, autenticação ou suporte a mídia real. Logs de inicialização também são impressos em stdout, portanto um futuro cliente IPC deve separar o canal de logs antes de depender desse protocolo em produção.
