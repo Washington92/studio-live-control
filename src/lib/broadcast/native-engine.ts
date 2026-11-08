@@ -6,7 +6,7 @@ export type NativeEngineEvent =
 export interface NativeEngineBridge {
   status(): Promise<{ ready: boolean }>;
   restart?(): Promise<{ restarted: boolean; reason?: string }>;
-  command(name: "STATUS" | "CUT" | "ADD_TEST_SOURCE" | "SOURCE_STATUS" | "PROGRAM_SOURCE_STATUS" | "VIDEO_STATUS"): Promise<string>;
+  command(name: "STATUS" | "CUT" | "ADD_TEST_SOURCE" | "SOURCE_STATUS" | "PROGRAM_SOURCE_STATUS" | "PREVIEW_SOURCE_STATUS" | "VIDEO_STATUS"): Promise<string>;
   onEvent(callback: (event: NativeEngineEvent) => void): () => void;
 }
 
@@ -46,6 +46,7 @@ export type NativeControlResponse =
   | { type: "source"; name: string }
   | { type: "source-status"; present: boolean; name: string }
   | { type: "program-source-status"; present: boolean; name: string }
+  | { type: "preview-source-status"; present: boolean; name: string }
   | { type: "video-status"; width: number; height: number; fpsNum: number; fpsDen: number }
   | { type: "bye" };
 
@@ -58,6 +59,8 @@ export function parseNativeControlResponse(line: string): NativeControlResponse 
     type: "video-status", width: Number(videoStatus[1]), height: Number(videoStatus[2]),
     fpsNum: Number(videoStatus[3]), fpsDen: Number(videoStatus[4]),
   };
+  const previewSourceStatus = /^PREVIEW_SOURCE_STATUS (PRESENT|ABSENT) (.+)$/.exec(message);
+  if (previewSourceStatus) return { type: "preview-source-status", present: previewSourceStatus[1] === "PRESENT", name: previewSourceStatus[2]! };
   const programSourceStatus = /^PROGRAM_SOURCE_STATUS (PRESENT|ABSENT) (.+)$/.exec(message);
   if (programSourceStatus) return { type: "program-source-status", present: programSourceStatus[1] === "PRESENT", name: programSourceStatus[2]! };
   const sourceStatus = /^SOURCE_STATUS (PRESENT|ABSENT) (.+)$/.exec(message);
