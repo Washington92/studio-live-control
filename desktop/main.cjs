@@ -46,6 +46,7 @@ function startEngine() {
     notify({ type: 'offline', reason: 'WMIX_ENGINE_BINARY not configured' });
     return;
   }
+  if (engine) return;
   engine = spawn(path.resolve(binary), ['--control'], {
     stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
   });
@@ -90,6 +91,12 @@ function command(name) {
 app.whenReady().then(() => {
   ipcMain.handle('wmix:engine-command', (_event, name) => command(name));
   ipcMain.handle('wmix:engine-status', () => ({ ready }));
+  ipcMain.handle('wmix:engine-restart', () => {
+    if (engine) return { restarted: false, reason: 'Engine process still running' };
+    if (!process.env.WMIX_ENGINE_BINARY) return { restarted: false, reason: 'WMIX_ENGINE_BINARY not configured' };
+    startEngine();
+    return { restarted: true };
+  });
   window = new BrowserWindow({
     width: 1440, height: 900,
     webPreferences: {
