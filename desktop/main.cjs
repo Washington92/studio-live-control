@@ -10,6 +10,8 @@ let nextId = 1;
 const queue = [];
 let window = null;
 const COMMAND_TIMEOUT_MS = 5000;
+const STARTUP_TIMEOUT_MS = 15000;
+let startupTimer = null;
 function settle(request, error, value) {
   if (!request) return;
   clearTimeout(request.timer);
@@ -47,11 +49,20 @@ function startEngine() {
     return;
   }
   if (engine) return;
+  ready = false;
   engine = spawn(path.resolve(binary), ['--control'], {
     stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
   });
+  const processRef = engine;
+  startupTimer = setTimeout(() => {
+    if (engine !== processRef || ready) return;
+    notify({ type: 'offline', reason: 'Engine startup timeout' });
+    processRef.kill();
+  }, STARTUP_TIMEOUT_MS);
   createInterface({ input: engine.stdout }).on('line', (line) => {
     if (line === 'READY WMIX_OBS_CONTROL_V1') {
+      clearTimeout(startupTimer);
+      startupTimer = null;
       ready = true;
       notify({ type: 'ready' });
       pump();
@@ -67,15 +78,19 @@ function startEngine() {
   });
   createInterface({ input: engine.stderr }).on('line', line => console.error('[WMix Engine]', line));
   engine.on('error', err => {
+    clearTimeout(startupTimer);
+    startupTimer = null;
     ready = false;
     failAll(err.message);
     notify({ type: 'offline', reason: err.message });
   });
   engine.on('exit', (code) => {
+    clearTimeout(startupTimer);
+    startupTimer = null;
     ready = false;
     failAll('Engine exited: ' + code);
     notify({ type: 'offline', reason: 'Engine exited: ' + code });
-    engine = null;
+    if (engine === processRef) engine = null;
   });
 }
 function command(name) {
