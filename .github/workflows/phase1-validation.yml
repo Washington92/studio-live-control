@@ -28,10 +28,15 @@ jobs:
         with:
           node-version: '22'
       - uses: oven-sh/setup-bun@v2
-      - name: Install dependencies
-        # Temporary compatibility step: package.json includes Electron but bun.lock
-        # was not regenerated. Restore --frozen-lockfile after committing a fresh bun.lock.
-        run: bun install
+      - name: Install dependencies (Bun lock compatibility v2)
+        # Electron was added after bun.lock was generated. Keep installation
+        # unfrozen until a regenerated bun.lock is committed.
+        shell: pwsh
+        run: |
+          Write-Host "WMix workflow revision: bun-unfrozen-v2"
+          Write-Host "Checked-out commit: $env:GITHUB_SHA"
+          bun install
+          if ($LASTEXITCODE -ne 0) { throw 'Bun dependency installation failed' }
       - name: Configure standalone native frame engine (without libobs)
         run: cmake -S engine -B engine/build -DWMIX_WITH_LIBOBS=OFF
       - name: Build standalone native frame engine
