@@ -115,3 +115,9 @@ Com o desktop Electron conectado, `TESTAR FONTE OBS` cria a fonte e consulta sua
 ## Consulta da configuração de vídeo
 
 `VIDEO_STATUS` usa `obs_get_video_info` para obter a resolução de saída e o FPS racional configurados no libobs. O botão `VÍDEO OBS` disponibiliza a consulta na interface desktop; o protocolo responde `VIDEO_STATUS <largura>x<altura> <fps_num>/<fps_den>` ou `ERROR VIDEO_UNAVAILABLE`. Esta consulta **não** mede quadros efetivamente renderizados, não transporta imagens ao React e não substitui validação Windows.
+
+## Tally nativo de diagnóstico
+
+`TALLY_STATUS` consulta `obs_get_output_source(0)` e retorna `TALLY_STATUS PROGRAM`, `TALLY_STATUS PREVIEW` ou `TALLY_STATUS UNKNOWN`. A resposta representa a cena conectada à saída do libobs, independentemente do estado lógico mantido pelo loop de controle. `TESTAR CUT OBS` consulta esse Tally depois de executar CUT.
+
+**Limites:** ainda não existe correspondência entre cenas/fontes nativas e IDs de entradas React; portanto o Tally não deve alterar os indicadores de câmera da UI. O teste precisa ser executado em Windows com libobs compilado.
