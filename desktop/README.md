@@ -69,30 +69,33 @@ A janela carrega a interface web local. O preload isolado disponibiliza `window.
 Comandos IPC agora expiram após 5 segundos. Em timeout, o host encerra o processo nativo para evitar que uma resposta atrasada seja atribuída ao próximo comando. O motor fica offline até uma nova inicialização do aplicativo. O mecanismo ainda não implementa reinicialização automática.
 
 
-## Windows portable desktop build (experimental)
+## WMix Studio para Windows — instalador completo (experimental)
 
-The Windows GitHub Actions workflow now builds a **separate, static Vite renderer**
-using `bunx vite build --config desktop/vite.config.ts`. This is deliberately
-independent of the TanStack/Lovable SSR build, which remains unchanged.
+A distribuição principal para Windows 10/11 agora é o **instalador NSIS**
+`WMix-Setup-Windows-x64.exe`. O pacote portátil não é mais publicado como
+artefato principal. A pasta de staging do Electron é gerada apenas dentro do CI
+para compor o instalador e validar que a interface abre no Windows.
 
-After frontend tests, the renderer build and Electron syntax checks pass, the
-workflow copies the Windows Electron runtime and the WMix renderer into a
-portable ZIP artifact named `WMix-Desktop-Portable-Windows-x64`.
+O instalador oferece assistente em português, seleção do diretório, opção de
+atalho no desktop, atalhos no menu Iniciar, cadastro em **Aplicativos instalados**
+do Windows e **Uninstall.exe**. A marca WMix é aplicada ao executável durante
+o build. A instalação requer privilégios administrativos por padrão e usa
+`Arquivos de Programas\\WMix Studio`.
 
-1. Open the GitHub repository **Actions** tab and select **WMix Phase 1 - Windows validation**.
-2. Select a successful run on `main`, then download the portable desktop artifact.
-3. Extract the ZIP to a normal folder (do not run it inside the archive).
-4. Launch `WMix.exe`. The interface loads from local files and does not need
-   a Lovable preview or a local Vite server.
+1. Abra **GitHub Actions > WMix Phase 1 - Windows validation**.
+2. Selecione a execução **verde** da branch `main`.
+3. Em **Artifacts**, baixe `WMix-Setup-Windows-x64` e extraia o ZIP que o
+   próprio GitHub fornece como envelope de download.
+4. Execute **WMix-Setup-Windows-x64.exe** e siga o assistente.
 
-**Limitations:** this is an experimental portable Electron shell, not an
-installer, signed binary, or a complete libobs-powered production switcher.
-The OBS engine executable is **not** bundled. Native controls remain offline
-unless a separately built compatible `WMIX_ENGINE_BINARY` is configured.
-Camera, screen and web media permissions may require additional Electron
-packaging and Windows hardware tests. Successful CI does not replace a
-real Windows interactive test.
+O CI verifica o compositor React, gera o setup e executa um teste de
+instalação e desinstalação silenciosas no runner Windows. Isso **não** valida
+todas as fontes reais, drivers e o processamento libobs no PC do usuário.
+A primeira versão do instalador ainda **não é assinada digitalmente**; o
+Windows SmartScreen pode solicitar confirmação de procedência. Não desative
+proteções do Windows para instalar arquivos de procedência desconhecida.
 
+O script de empacotamento é `desktop/installer/wmix.nsi`.
 
 ## Seleção do motor OBS pelo WMix (experimental)
 
