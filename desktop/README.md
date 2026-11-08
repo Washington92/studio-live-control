@@ -92,3 +92,31 @@ unless a separately built compatible `WMIX_ENGINE_BINARY` is configured.
 Camera, screen and web media permissions may require additional Electron
 packaging and Windows hardware tests. Successful CI does not replace a
 real Windows interactive test.
+
+
+## Seleção do motor OBS pelo WMix (experimental)
+
+Na versão desktop, quando o motor nativo estiver offline, o cabeçalho oferece
+**SELECIONAR OBS**. Esse botão abre o seletor de executável do Windows e
+aceita somente `wmix-obs-smoke.exe`. O caminho escolhido é armazenado no
+perfil local do Electron (`native-engine.json` dentro de `userData`) e
+carregado na próxima inicialização. A variável `WMIX_ENGINE_BINARY`, quando
+definida, tem prioridade sobre a seleção salva.
+
+**Atenção:** `wmix-engine.exe` (gerador de barras/quadros de teste) NÃO é
+o processo libobs e NÃO suporta o protocolo `--control`. A compilação padrão
+do GitHub Actions ainda gera apenas o gerador standalone. Para obter
+`wmix-obs-smoke.exe`, é necessário compilar `engine/obs` com um SDK/runtime
+libobs compatível no Windows e fornecer suas DLLs e plugins. Não basta
+ter o OBS Studio instalado ou renomear o executável standalone.
+O status **OBS: CONECTADO** confirma apenas o handshake de controle nativo;
+não garante ainda que as entradas, o áudio e o Program web sejam processados
+pelo libobs.
+
+## Ícone do Windows
+
+O pacote atual utiliza a identidade padrão do Electron no executável.
+Para personalizar o ícone de `WMix.exe`, precisamos adicionar ao projeto
+o arquivo original da marca em formato `.ico` com múltiplas resoluções e
+uma etapa de atualização do recurso de ícone do PE no workflow Windows.
+O favicon HTML, isoladamente, não altera o ícone do executável Windows.
