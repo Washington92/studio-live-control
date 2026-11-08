@@ -111,3 +111,7 @@ O resultado esperado é fonte presente no registro, ausente inicialmente no Prog
 Com o desktop Electron conectado, `TESTAR FONTE OBS` cria a fonte e consulta sua presença. `TESTAR CUT OBS` consulta `STATUS`, envia `CUT`, exige a resposta `OK CUT ...`, consulta novamente `STATUS` e verifica `PROGRAM_SOURCE_STATUS`. Os dois botões compartilham o bloqueio de operações simultâneas.
 
 **Importante:** este CUT é um teste isolado das cenas libobs. Ele **não** troca o Program web, não sincroniza o Tally das entradas da interface e não demonstra frames renderizados. Uma falha no comando não é apresentada como sucesso. Para validar a integração é necessário executar o aplicativo desktop no Windows com o motor compilado.
+
+## Consulta da configuração de vídeo
+
+`VIDEO_STATUS` usa `obs_get_video_info` para obter a resolução de saída e o FPS racional configurados no libobs. O botão `VÍDEO OBS` disponibiliza a consulta na interface desktop; o protocolo responde `VIDEO_STATUS <largura>x<altura> <fps_num>/<fps_den>` ou `ERROR VIDEO_UNAVAILABLE`. Esta consulta **não** mede quadros efetivamente renderizados, não transporta imagens ao React e não substitui validação Windows.
