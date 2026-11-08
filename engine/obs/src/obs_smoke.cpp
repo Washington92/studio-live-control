@@ -20,6 +20,11 @@ int main(int argc, char** argv) {
   }
 
   int result = 0;
+  if (initialize_sources) {
+    // OBS plugins must be loaded before creating plugin-provided sources.
+    obs_load_all_modules();
+    obs_log_loaded_modules();
+  }
   if (initialize_av) {
     obs_video_info video{};
     video.graphics_module = "libobs-d3d11.dll";
@@ -52,7 +57,7 @@ int main(int argc, char** argv) {
         if (initialize_scene || initialize_dual || initialize_switch || initialize_control || initialize_sources) {
           obs_scene_t* program = obs_scene_create("WMix Program");
           obs_scene_t* preview = (initialize_dual || initialize_switch || initialize_control || initialize_sources) ? obs_scene_create("WMix Preview") : nullptr;
-          if (!program || ((initialize_dual || initialize_switch || initialize_control) && !preview)) {
+          if (!program || ((initialize_dual || initialize_switch || initialize_control || initialize_sources) && !preview)) {
             std::cerr << "WMix: falha ao criar cenas.\n";
             result = 1;
           } else {
@@ -71,8 +76,6 @@ int main(int argc, char** argv) {
           if (initialize_sources && program && preview && result == 0) {
             // A built-in libobs color source is a reproducible first input.
             // It proves source creation and scene attachment, not camera capture.
-            obs_load_all_modules();
-            obs_log_loaded_modules();
             obs_source_t* source = obs_source_create("color_source", "WMix Test Color", nullptr, nullptr);
             if (!source) {
               std::cerr << "WMix: color_source unavailable (check OBS plugins).\\n";
