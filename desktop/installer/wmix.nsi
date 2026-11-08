@@ -12,8 +12,12 @@
 !define APP_VERSION "0.1.0"
 !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\WMix Studio"
 
+!ifndef WMIX_OUTPUT
+  !error "WMIX_OUTPUT must point to the setup executable destination"
+!endif
+
 Name "${APP_NAME}"
-OutFile "WMix-Setup-Windows-x64.exe"
+OutFile "${WMIX_OUTPUT}"
 InstallDir "$PROGRAMFILES64\WMix Studio"
 InstallDirRegKey HKLM "Software\WMix Studio" "InstallDir"
 RequestExecutionLevel admin
