@@ -66,7 +66,7 @@ function startEngine() {
       ready = true;
       notify({ type: 'ready' });
       pump();
-    } else if (/^(STATUS |SOURCE_STATUS |OK CUT |OK SOURCE |ERROR |BYE)/.test(line)) {
+    } else if (/^(STATUS |SOURCE_STATUS |PROGRAM_SOURCE_STATUS |OK CUT |OK SOURCE |ERROR |BYE)/.test(line)) {
       if (pending) {
         const request = pending;
         pending = null;
@@ -95,7 +95,7 @@ function startEngine() {
   });
 }
 function command(name) {
-  if (!['STATUS', 'CUT', 'ADD_TEST_SOURCE', 'SOURCE_STATUS'].includes(name)) return Promise.reject(new Error('Unsupported command'));
+  if (!['STATUS', 'CUT', 'ADD_TEST_SOURCE', 'SOURCE_STATUS', 'PROGRAM_SOURCE_STATUS'].includes(name)) return Promise.reject(new Error('Unsupported command'));
   if (!engine || !ready) return Promise.reject(new Error('Engine offline'));
   if (queue.length >= 50) return Promise.reject(new Error('Command queue full'));
   return new Promise((resolve, reject) => {
