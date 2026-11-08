@@ -66,3 +66,14 @@ O processo responde `READY WMIX_OBS_CONTROL_V1` e aceita uma instrução por lin
 | `QUIT` | `BYE` | Encerra o processo |
 
 Comando desconhecido recebe `ERROR UNKNOWN_COMMAND`. Esse é um protocolo de texto para testes locais; ainda não existe ponte com o frontend, autenticação ou suporte a mídia real. Logs de inicialização também são impressos em stdout, portanto um futuro cliente IPC deve separar o canal de logs antes de depender desse protocolo em produção.
+
+## Fonte de teste nativa
+
+O modo `--sources` inicializa libobs, carrega os plugins encontrados no runtime, cria uma fonte `color_source` e a associa à cena Preview. É um passo verificável em direção ao gerenciamento de fontes.
+
+```powershell
+.\engine\build\obs\Release\wmix-obs-smoke.exe --sources
+ctest --test-dir engine/build -C Release --output-on-failure
+```
+
+**Limitações:** o plugin `color_source` precisa estar instalado e detectável. O teste ainda não captura câmera, não renderiza quadros no frontend, nem estabelece vínculo entre IDs React e fontes OBS. A execução precisa ser validada em Windows com GPU e DLLs compatíveis.
