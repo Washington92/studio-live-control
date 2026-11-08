@@ -5,7 +5,8 @@ export type NativeEngineEvent =
 
 export interface NativeEngineBridge {
   status(): Promise<{ ready: boolean }>;
-  command(name: "STATUS" | "CUT"): Promise<string>;
+  restart?(): Promise<{ restarted: boolean; reason?: string }>;
+  command(name: "STATUS" | "CUT" | "ADD_TEST_SOURCE"): Promise<string>;
   onEvent(callback: (event: NativeEngineEvent) => void): () => void;
 }
 
