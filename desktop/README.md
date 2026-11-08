@@ -63,3 +63,7 @@ npm run desktop
 ```
 
 A janela carrega a interface web local. O preload isolado disponibiliza `window.wmixNative.status()`, `window.wmixNative.command('STATUS')`, `window.wmixNative.command('CUT')` e `window.wmixNative.onEvent(callback)`. **Os botões da UI ainda não chamam essas funções**. Não há instalador, Preview/Program nativo visível ou teste validado em Windows. O host só aceita endereço de desenvolvimento local.
+
+## Proteção contra travamento
+
+Comandos IPC agora expiram após 5 segundos. Em timeout, o host encerra o processo nativo para evitar que uma resposta atrasada seja atribuída ao próximo comando. O motor fica offline até uma nova inicialização do aplicativo. O mecanismo ainda não implementa reinicialização automática.
