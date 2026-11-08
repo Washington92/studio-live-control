@@ -33,3 +33,25 @@ export async function nativeEngineDiagnostics(): Promise<{
   const scene = await bridge.command("STATUS");
   return { available: true, ready: true, scene };
 }
+
+/** Parse the native CLI protocol without treating an ERROR as a successful CUT.
+ * This is diagnostic groundwork; the browser is not yet connected to native stdin/stdout.
+ */
+export type NativeControlResponse =
+  | { type: "ready"; version: string }
+  | { type: "status"; scene: "PROGRAM" | "PREVIEW" }
+  | { type: "cut"; ok: boolean; scene: "PROGRAM" | "PREVIEW" }
+  | { type: "error"; message: string }
+  | { type: "bye" };
+
+export function parseNativeControlResponse(line: string): NativeControlResponse {
+  const message = line.trim();
+  if (message === "READY WMIX_OBS_CONTROL_V1") return { type: "ready", version: "WMIX_OBS_CONTROL_V1" };
+  if (message === "BYE") return { type: "bye" };
+  const status = /^STATUS (PROGRAM|PREVIEW)$/.exec(message);
+  if (status) return { type: "status", scene: status[1] as "PROGRAM" | "PREVIEW" };
+  const cut = /^(OK|ERROR) CUT (PROGRAM|PREVIEW)$/.exec(message);
+  if (cut) return { type: "cut", ok: cut[1] === "OK", scene: cut[2] as "PROGRAM" | "PREVIEW" };
+  if (message.startsWith("ERROR ")) return { type: "error", message: message.slice(6) };
+  return { type: "error", message: "Resposta nativa desconhecida" };
+}
