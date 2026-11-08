@@ -199,7 +199,12 @@ jobs:
           if (!(Test-Path $installedExe)) { throw 'WMix.exe was not installed' }
           if (!(Test-Path (Join-Path $installDir 'Uninstall.exe'))) { throw 'Windows uninstaller missing' }
           if (!(Test-Path (Join-Path $installDir 'resources/app/dist-renderer/index.html'))) { throw 'Installed WMix renderer missing' }
-          Write-Host 'WMix setup installed the application and uninstaller successfully'
+          $registered = Get-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\WMix Studio' -ErrorAction SilentlyContinue
+          if (!$registered -or $registered.DisplayName -ne 'WMix Studio') { throw 'WMix missing from Windows installed apps registry' }
+          if ($registered.InstallLocation -ne $installDir) { throw 'Windows app registry points to unexpected install directory' }
+          $startMenu = Join-Path $env:ProgramData 'Microsoft/Windows/Start Menu/Programs/WMix Studio/WMix Studio.lnk'
+          if (!(Test-Path $startMenu)) { throw 'WMix Start Menu shortcut missing' }
+          Write-Host 'WMix setup installed the application, registry entry, Start Menu shortcut and uninstaller successfully'
           $env:WMIX_SMOKE_TEST = '1'
           $env:WMIX_ENGINE_BINARY = ''
           $appCheck = Start-Process -FilePath $installedExe -PassThru
@@ -212,7 +217,10 @@ jobs:
           $uninstall = Start-Process -FilePath (Join-Path $installDir 'Uninstall.exe') -ArgumentList '/S' -PassThru -Wait
           if ($uninstall.ExitCode -ne 0) { throw "WMix silent uninstall failed: $($uninstall.ExitCode)" }
           if (Test-Path $installedExe) { throw 'WMix.exe remained after uninstall' }
-          Write-Host 'WMix application uninstalled successfully'
+          $registeredAfter = Get-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\WMix Studio' -ErrorAction SilentlyContinue
+          if ($registeredAfter) { throw 'WMix still registered in installed apps after uninstall' }
+          if (Test-Path $startMenu) { throw 'WMix Start Menu shortcut remained after uninstall' }
+          Write-Host 'WMix application, installed-app registration and shortcuts removed successfully'
       - name: Upload WMix Windows installer
         uses: actions/upload-artifact@v4
         with:
