@@ -30,8 +30,8 @@ jobs:
       - name: Obtain pinned official OBS Studio source
         shell: pwsh
         run: |
-          git clone --depth 1 --branch 31.1.2 --recursive --shallow-submodules https://github.com/obsproject/obs-studio.git obs-upstream
-          if ($LASTEXITCODE -ne 0) { throw 'Failed to fetch official OBS 31.1.2 source' }
+          git clone --depth 1 --branch 33.0.1 --recursive --shallow-submodules https://github.com/obsproject/obs-studio.git obs-upstream
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to fetch official OBS 33.0.1 source' }
 
       - name: Attach native WMix target to official OBS source build
         shell: pwsh
@@ -66,8 +66,8 @@ jobs:
           if (!(Test-Path $wmix)) { throw "Native WMix executable missing at $wmix" }
           if (!(Test-Path $obsDll)) { throw "Actual OBS shared library missing at $obsDll" }
           if (!(Test-Path $graphicsDll)) { throw 'OBS D3D11 renderer DLL missing' }
-          $plugin = Join-Path $runtime 'obs-plugins/64bit/obs-filters.dll'
-          if (!(Test-Path $plugin)) { throw 'OBS filters plugin DLL missing' }
+          $plugin = Get-ChildItem -Path $runtime -Recurse -Filter 'obs-filters.dll' -File | Select-Object -First 1
+          if (!$plugin) { throw 'OBS filters plugin DLL missing from generated OBS runtime' }
           Copy-Item $wmix (Join-Path $bin 'wmix-obs-smoke.exe') -Force
           $stage = Join-Path $env:RUNNER_TEMP 'WMix-OBS-Native-Windows'
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
@@ -116,7 +116,7 @@ jobs:
             Write-Warning 'GPU-dependent control probe did not pass. This is not proof that the WMix OBS engine works end-to-end.'
           }
           "### WMix native libobs build" >> $env:GITHUB_STEP_SUMMARY
-          "- OBS version: 31.1.2 (pinned official source)" >> $env:GITHUB_STEP_SUMMARY
+          "- OBS version: 33.0.1 (pinned official source)" >> $env:GITHUB_STEP_SUMMARY
           "- Native engine: wmix-obs-smoke.exe" >> $env:GITHUB_STEP_SUMMARY
           "- GPU-dependent protocol probe: ${{ steps.gpu-probe.outcome }}" >> $env:GITHUB_STEP_SUMMARY
 
