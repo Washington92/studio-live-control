@@ -53,3 +53,16 @@ Reference: [Emil Kowalski, Apple Design Skill](https://github.com/emilkowalski/s
 3. Medir FPS/frames perdidos e áudio diretamente do motor (telemetria web não equivale a métricas do libobs).
 4. Implementar peak-hold temporal, recuperação/reinicialização do motor e testes de integração Windows.
 5. Executar lint, testes e compilação em ambiente Windows com dependências nativas; commits no GitHub não significam homologação.
+
+## Fase 1 — rodada de encerramento parcial
+
+- Peak Hold visual de 1,2 s nos medidores web; não altera áudio nem substitui medição do libobs.
+- Electron: endpoint IPC `wmix:engine-restart` para reiniciar manualmente processo já encerrado; o preload expõe `restart()` opcional e a barra mostra a ação somente quando offline.
+- O protocolo CLI nativo preserva o último estado confirmado quando CUT falha.
+
+**Critérios de aceite ainda não atendidos (não marcar Fase 1 como concluída):**
+1. Entradas reais mapeadas para fontes OBS e Tally derivado do Program nativo.
+2. Preview e Program nativos com imagem verificável e CUT confirmado no vídeo efetivamente renderizado.
+3. AUTO e T-Bar vinculados ao processamento de transições do libobs, com teste de latência.
+4. Medição de clipping, FPS e frames perdidos no motor nativo.
+5. Testes automatizados, build Windows e ensaio de recuperação de falhas executados.
