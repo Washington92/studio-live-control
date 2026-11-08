@@ -44,3 +44,7 @@ ctest --test-dir engine/build -C Release --output-on-failure
 ```
 
 `--dual` inicializa vídeo/áudio, cria cenas separadas de Preview e Program e conecta somente Program ao canal de saída 0. **Não exibe imagens nem testa transições ou fontes reais.** O teste exige DLLs do OBS, plugins gráficos e uma GPU compatível no ambiente de execução.
+
+## Corte nativo experimental
+
+`wmix-obs-smoke --switch` cria duas cenas e executa um **CUT** alterando a fonte do canal de saída Program para a cena Preview; confirma a troca consultando o libobs. O teste ainda usa cenas vazias, não renderiza conteúdo nem conecta botões da interface. Execute `ctest --test-dir engine/build -C Release --output-on-failure` após compilar e configurar o runtime do OBS.
