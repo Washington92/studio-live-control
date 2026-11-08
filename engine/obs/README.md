@@ -77,3 +77,11 @@ ctest --test-dir engine/build -C Release --output-on-failure
 ```
 
 **Limitações:** o plugin `color_source` precisa estar instalado e detectável. O teste ainda não captura câmera, não renderiza quadros no frontend, nem estabelece vínculo entre IDs React e fontes OBS. A execução precisa ser validada em Windows com GPU e DLLs compatíveis.
+
+## Protocolo de fontes (incremental)
+
+No modo `--control`, o comando `ADD_TEST_SOURCE` cria uma única fonte `color_source` chamada `WMix Test Color` na cena Preview. Responde `OK SOURCE WMix Test Color`, `ERROR SOURCE_UNAVAILABLE` (plugin ausente) ou `ERROR SOURCE_ATTACH` (falha de associação). Chamadas repetidas retornam sucesso sem duplicar a fonte.
+
+O host Electron encaminha esse comando pelo IPC e o bridge TypeScript interpreta a resposta. **Ainda não há botão na UI para criar a fonte nem transporte de quadros para o Preview.** O comando pode ser testado via `window.wmixNative.command("ADD_TEST_SOURCE")` no desktop em desenvolvimento.
+
+Para homologar: compilar no Windows, confirmar plugins OBS, executar `ADD_TEST_SOURCE`, consultar `STATUS`, executar `CUT` e verificar o estado. Isso ainda não substitui a inspeção visual dos quadros.
