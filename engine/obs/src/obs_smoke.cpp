@@ -117,6 +117,20 @@ int main(int argc, char** argv) {
               }
               if (command == "STATUS") {
                 std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+              } else if (command == "PROGRAM_SOURCE_STATUS") {
+                // Inspect the actual scene connected to output channel 0.
+                // This verifies scene routing, not decoded/rendered video frames.
+                obs_source_t* active = obs_get_output_source(0);
+                obs_source_t* preview_source = obs_scene_get_source(preview);
+                obs_source_t* program_source = obs_scene_get_source(program);
+                const bool known_scene = active == preview_source || active == program_source;
+                obs_scene_t* active_scene = active == preview_source ? preview : program;
+                obs_sceneitem_t* item = known_scene
+                  ? obs_scene_find_source(active_scene, "WMix Test Color") : nullptr;
+                std::cout << "PROGRAM_SOURCE_STATUS "
+                          << (known_scene && item ? "PRESENT" : "ABSENT")
+                          << " WMix Test Color" << std::endl;
+                if (active) obs_source_release(active);
               } else if (command == "SOURCE_STATUS") {
                 // Expose native source presence independently of the web input list.
                 obs_source_t* test_source = obs_get_source_by_name("WMix Test Color");
