@@ -118,6 +118,15 @@ int main(int argc, char** argv) {
               }
               if (command == "STATUS") {
                 std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+              } else if (command == "TALLY_STATUS") {
+                // Derive tally from the output channel, never from the last
+                // requested CUT. This detects external output changes too.
+                obs_source_t* active = obs_get_output_source(0);
+                const char* scene = "UNKNOWN";
+                if (active == obs_scene_get_source(preview)) scene = "PREVIEW";
+                else if (active == obs_scene_get_source(program)) scene = "PROGRAM";
+                std::cout << "TALLY_STATUS " << scene << std::endl;
+                if (active) obs_source_release(active);
               } else if (command == "VIDEO_STATUS") {
                 // Report actual libobs video subsystem configuration, not an
                 // unverified frame counter or a claim that Preview is visible.
