@@ -122,3 +122,21 @@ describe("native output tally", () => {
     });
   });
 });
+
+describe("native protocol regression after Lovable transform failure", () => {
+  it("parses VIDEO_STATUS without malformed escaped regex", () => {
+    expect(parseNativeControlResponse("VIDEO_STATUS 1920x1080 60/1")).toEqual({
+      type: "video-status", width: 1920, height: 1080, fpsNum: 60, fpsDen: 1,
+    });
+    expect(parseNativeControlResponse("VIDEO_STATUS invalid").type).toBe("error");
+  });
+
+  it("handles an unknown native output scene safely", () => {
+    expect(parseNativeControlResponse("STATUS UNKNOWN")).toEqual({
+      type: "status", scene: "UNKNOWN",
+    });
+    expect(parseNativeControlResponse("ERROR CUT UNKNOWN")).toEqual({
+      type: "error", message: "CUT UNKNOWN",
+    });
+  });
+});
