@@ -6,7 +6,7 @@ on:
       - 'src/**'
       - 'desktop/**'
       - 'package.json'
-      - 'package-lock.json'
+      - 'bun.lock'
       - '.github/workflows/phase1-validation.yml'
   pull_request:
     paths:
@@ -25,9 +25,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
+      - uses: oven-sh/setup-bun@v2
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
       - name: Frontend tests
         run: npm test -- --run
       - name: TypeScript and frontend build
