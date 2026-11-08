@@ -516,6 +516,20 @@ export function Studio() {
             }
           }}>TESTAR CUT OBS</Button>
         )}
+        {nativeStatus === "ready" && (
+          <Button variant="console" size="console" type="button" disabled={nativeBusy} className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent disabled:opacity-50" title="Consultar resolução e FPS configurados no libobs" onClick={async () => {
+            const bridge = nativeEngine();
+            if (!bridge) return;
+            setNativeBusy(true);
+            try {
+              setNativeDiagnostic(await bridge.command("VIDEO_STATUS"));
+            } catch (error) {
+              setNativeDiagnostic(error instanceof Error ? error.message : "Falha na consulta de vídeo");
+            } finally {
+              setNativeBusy(false);
+            }
+          }}>VÍDEO OBS</Button>
+        )}
         {nativeDiagnostic && <span role="status" className="max-w-[210px] truncate text-[10px] text-muted-foreground" title={nativeDiagnostic}>{nativeDiagnostic}</span>}
         {nativeStatus === "offline" && nativeEngine()?.restart && (
           <Button variant="console" size="console" type="button" className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold hover:bg-accent" title="Tentar reiniciar o processo nativo" onClick={async () => {
