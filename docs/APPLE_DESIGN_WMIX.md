@@ -66,3 +66,9 @@ Reference: [Emil Kowalski, Apple Design Skill](https://github.com/emilkowalski/s
 3. AUTO e T-Bar vinculados ao processamento de transições do libobs, com teste de latência.
 4. Medição de clipping, FPS e frames perdidos no motor nativo.
 5. Testes automatizados, build Windows e ensaio de recuperação de falhas executados.
+
+## Diagnóstico de fontes libobs na interface (incremento)
+
+Com Electron e `WMIX_ENGINE_BINARY` configurados, o indicador `OBS: CONECTADO` libera `TESTAR FONTE OBS`. O botão chama `ADD_TEST_SOURCE`, apresenta o resultado textual e bloqueia cliques simultâneos enquanto aguarda resposta. Não cria cartão de entrada no WMix web nem sincroniza Preview/Program.
+
+**Não homologado:** execução do binário Windows, plugin color_source disponível, frames renderizados e mapeamento de entradas. Para encerrar a Fase 1 é necessário validar vídeo real, CUT/AUTO/T-Bar nativos e telemetria com testes em hardware.
