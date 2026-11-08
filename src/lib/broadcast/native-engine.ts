@@ -57,7 +57,7 @@ export function parseNativeControlResponse(line: string): NativeControlResponse 
   if (message === "BYE") return { type: "bye" };
   const tally = /^TALLY_STATUS (PROGRAM|PREVIEW|UNKNOWN)$/.exec(message);
   if (tally) return { type: "tally-status", scene: tally[1] as "PROGRAM" | "PREVIEW" | "UNKNOWN" };
-  const videoStatus = /^VIDEO_STATUS (\\d+)x(\\d+) (\\d+)\\/(\\d+)$/.exec(message);
+  const videoStatus = /^VIDEO_STATUS ([0-9]+)x([0-9]+) ([0-9]+)\/([0-9]+)$/.exec(message);
   if (videoStatus && Number(videoStatus[4]) > 0) return {
     type: "video-status", width: Number(videoStatus[1]), height: Number(videoStatus[2]),
     fpsNum: Number(videoStatus[3]), fpsDen: Number(videoStatus[4]),
