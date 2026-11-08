@@ -110,14 +110,21 @@ int main(int argc, char** argv) {
             // not yet connected to the browser-based WMix interface.
             std::cout << "READY WMIX_OBS_CONTROL_V1" << std::endl;
             std::string command;
-            bool preview_on_air = false;
+            const auto active_scene_name = [&]() -> const char* {
+              obs_source_t* active = obs_get_output_source(0);
+              const char* name = "UNKNOWN";
+              if (active == obs_scene_get_source(preview)) name = "PREVIEW";
+              else if (active == obs_scene_get_source(program)) name = "PROGRAM";
+              if (active) obs_source_release(active);
+              return name;
+            };
             while (std::getline(std::cin, command)) {
               if (command == "QUIT") {
                 std::cout << "BYE" << std::endl;
                 break;
               }
               if (command == "STATUS") {
-                std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+                std::cout << "STATUS " << active_scene_name() << std::endl;
               } else if (command == "TALLY_STATUS") {
                 // Derive tally from the output channel, never from the last
                 // requested CUT. This detects external output changes too.
@@ -189,17 +196,19 @@ int main(int argc, char** argv) {
                   }
                 }
               } else if (command == "CUT") {
-                // Commit the logical Program state only after libobs confirms
-                // the output source. A failed CUT must not flip STATUS.
-                const bool requested_preview_on_air = !preview_on_air;
-                obs_source_t* desired = obs_scene_get_source(requested_preview_on_air ? preview : program);
+                // Route according to the real output, not a cached boolean.
+                // Unknown output must not be silently replaced by a test CUT.
+                const std::string before = active_scene_name();
+                if (before == "UNKNOWN") {
+                  std::cout << "ERROR CUT UNKNOWN" << std::endl;
+                  continue;
+                }
+                const bool switch_to_preview = before == "PROGRAM";
+                obs_source_t* desired = obs_scene_get_source(switch_to_preview ? preview : program);
                 obs_set_output_source(0, desired);
-                obs_source_t* active = obs_get_output_source(0);
-                const bool ok = active == desired;
-                if (active) obs_source_release(active);
-                if (ok) preview_on_air = requested_preview_on_air;
-                std::cout << (ok ? "OK CUT " : "ERROR CUT ")
-                          << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+                const std::string after = active_scene_name();
+                const bool ok = after == (switch_to_preview ? "PREVIEW" : "PROGRAM");
+                std::cout << (ok ? "OK CUT " : "ERROR CUT ") << after << std::endl;
                 if (!ok) {
                   // Keep the control loop alive so STATUS and QUIT still work.
                   std::cerr << "WMix: CUT nao confirmado pelo libobs. Estado anterior preservado.\n";
