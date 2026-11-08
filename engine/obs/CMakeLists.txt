@@ -21,3 +21,11 @@ add_test(NAME wmix_obs_cut COMMAND wmix-obs-smoke --switch)
 
 # Requires the OBS color-source plugin to be discoverable at runtime.
 add_test(NAME wmix_obs_test_source COMMAND wmix-obs-smoke --sources)
+
+# End-to-end native control protocol test; requires OBS plugins and GPU.
+add_test(NAME wmix_obs_control_protocol
+  COMMAND ${CMAKE_COMMAND}
+    "-DWMIX_EXECUTABLE=$<TARGET_FILE:wmix-obs-smoke>"
+    "-DWMIX_COMMANDS=${CMAKE_CURRENT_SOURCE_DIR}/tests/control_commands.txt"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/control_protocol.cmake")
+set_tests_properties(wmix_obs_control_protocol PROPERTIES TIMEOUT 30)
