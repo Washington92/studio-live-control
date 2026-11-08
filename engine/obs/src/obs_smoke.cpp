@@ -94,17 +94,20 @@ int main(int argc, char** argv) {
               if (command == "STATUS") {
                 std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
               } else if (command == "CUT") {
-                preview_on_air = !preview_on_air;
-                obs_source_t* desired = obs_scene_get_source(preview_on_air ? preview : program);
+                // Commit the logical Program state only after libobs confirms
+                // the output source. A failed CUT must not flip STATUS.
+                const bool requested_preview_on_air = !preview_on_air;
+                obs_source_t* desired = obs_scene_get_source(requested_preview_on_air ? preview : program);
                 obs_set_output_source(0, desired);
                 obs_source_t* active = obs_get_output_source(0);
                 const bool ok = active == desired;
                 if (active) obs_source_release(active);
+                if (ok) preview_on_air = requested_preview_on_air;
                 std::cout << (ok ? "OK CUT " : "ERROR CUT ")
                           << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
                 if (!ok) {
-                  result = 1;
-                  break;
+                  // Keep the control loop alive so STATUS and QUIT still work.
+                  std::cerr << "WMix: CUT nao confirmado pelo libobs. Estado anterior preservado.\\n";
                 }
               } else if (!command.empty()) {
                 std::cout << "ERROR UNKNOWN_COMMAND" << std::endl;
