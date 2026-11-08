@@ -117,6 +117,13 @@ int main(int argc, char** argv) {
               }
               if (command == "STATUS") {
                 std::cout << "STATUS " << (preview_on_air ? "PREVIEW" : "PROGRAM") << std::endl;
+              } else if (command == "SOURCE_STATUS") {
+                // Expose native source presence independently of the web input list.
+                obs_source_t* test_source = obs_get_source_by_name("WMix Test Color");
+                const bool exists = test_source != nullptr;
+                if (test_source) obs_source_release(test_source);
+                std::cout << "SOURCE_STATUS " << (exists ? "PRESENT" : "ABSENT")
+                          << " WMix Test Color" << std::endl;
               } else if (command == "ADD_TEST_SOURCE") {
                 // A deterministic source for verifying native scene wiring.
                 // Real cameras and UI input IDs require a separate mapping protocol.
