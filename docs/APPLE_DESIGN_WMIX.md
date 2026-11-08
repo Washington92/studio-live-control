@@ -39,3 +39,17 @@ Reference: [Emil Kowalski, Apple Design Skill](https://github.com/emilkowalski/s
 - CUT e AUTO têm rótulos acessíveis descritivos.
 - Botões do mixer expõem `aria-pressed`; faders expõem o valor em decibéis via `aria-valuetext`.
 - **Ainda pendente:** estados explícitos de confirmação do motor libobs, sincronização de fontes nativas com entradas React, testes de latência de T-Bar e medição real de clipping. Nenhuma destas capacidades deve ser apresentada como concluída.
+
+## Fase 1 — segunda rodada
+
+- `transition-guard.ts`: máquina de estados assíncrona com bloqueio de solicitações simultâneas e fases idle/pending/confirmed/error. Testes unitários adicionados; **ainda não ligada ao CUT da interface**, pois as fontes do compositor web não estão mapeadas para cenas do libobs.
+- Barra superior: indicador de disponibilidade do motor nativo (WEB / OBS CONECTADO / OBS OFFLINE). Indica **conexão**, não transmissão de mídia nem sincronização de cenas.
+- Mixer: indicador de clipping quando o pico informado pelo medidor chega a 1.0 (0 dBFS); sem peak-hold temporal ainda.
+
+### Pendências da fase 1
+
+1. Associar IDs de entradas React às fontes/cenas do libobs e confirmar CUT/Program/Tally a partir do motor.
+2. Implementar AUTO e T-Bar no motor com máquina de estados e confirmação por quadro.
+3. Medir FPS/frames perdidos e áudio diretamente do motor (telemetria web não equivale a métricas do libobs).
+4. Implementar peak-hold temporal, recuperação/reinicialização do motor e testes de integração Windows.
+5. Executar lint, testes e compilação em ambiente Windows com dependências nativas; commits no GitHub não significam homologação.
