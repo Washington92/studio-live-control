@@ -106,13 +106,27 @@ jobs:
           $env:WMIX_SMOKE_TEST = '1'
           $env:WMIX_ENGINE_BINARY = ''
           $env:WMIX_SMOKE_SCREENSHOT = Join-Path $env:RUNNER_TEMP 'wmix-desktop-smoke.png'
-          $process = Start-Process -FilePath $exe -PassThru
+          $stdout = Join-Path $env:RUNNER_TEMP 'wmix-smoke-stdout.log'
+          $stderr = Join-Path $env:RUNNER_TEMP 'wmix-smoke-stderr.log'
+          $process = Start-Process -FilePath $exe -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
           if (!$process.WaitForExit(60000)) {
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             throw 'WMix Windows smoke test exceeded 60 seconds'
           }
+          if (Test-Path $stdout) { Get-Content $stdout | Select-Object -Last 100 }
+          if (Test-Path $stderr) { Get-Content $stderr | Select-Object -Last 100 }
           if ($process.ExitCode -ne 0) { throw "WMix React mount smoke test failed: exit $($process.ExitCode)" }
           if (!(Test-Path $env:WMIX_SMOKE_SCREENSHOT)) { throw 'WMix screenshot missing after successful smoke test' }
+      - name: Upload Windows smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WMix-Windows-Smoke-Logs
+          path: |
+            ${{ runner.temp }}/wmix-smoke-stdout.log
+            ${{ runner.temp }}/wmix-smoke-stderr.log
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Upload Windows desktop smoke screenshot
         uses: actions/upload-artifact@v4
         with:
