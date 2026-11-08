@@ -330,6 +330,10 @@ select:focus-visible,
 .tbar::-webkit-slider-thumb, .fader::-webkit-slider-thumb { box-shadow: var(--control-inset); }
 .tbar::-moz-range-thumb, .fader::-moz-range-thumb { box-shadow: var(--control-inset); }
 .wmix-control.animate-pulse { animation: none; }
+@media (max-width: 767px) {
+  .wmix-monitor-heading + div { flex: none; aspect-ratio: 16 / 9; }
+  .wmix-monitor-heading + div > div { width: 100%; height: 100%; }
+}
 @media (prefers-reduced-motion: reduce) {
   .wmix-studio *, .wmix-dialog * { animation: none !important; transition: none !important; }
 }
