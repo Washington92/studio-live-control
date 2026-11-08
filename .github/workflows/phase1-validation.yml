@@ -36,13 +36,23 @@ jobs:
         run: cmake --build engine/build --config Release
       - name: Run native frame self-test
         run: ctest --test-dir engine/build -C Release --output-on-failure
-      - name: Generate a native test frame
-        run: .\\engine\\build\\Release\\wmix-engine.exe --frame ${{ runner.temp }}\\wmix-frame.ppm
+      - name: Generate and validate a native test frame
+        shell: pwsh
+        run: |
+          $frame = Join-Path $env:RUNNER_TEMP 'wmix-frame.ppm'
+          & './engine/build/Release/wmix-engine.exe' --frame $frame
+          if ($LASTEXITCODE -ne 0) { throw 'Native frame generator failed' }
+          $bytes = [System.IO.File]::ReadAllBytes($frame)
+          $header = [System.Text.Encoding]::ASCII.GetBytes("P6`n640 360`n255`n")
+          if ($bytes.Length -ne ($header.Length + 640 * 360 * 3)) { throw 'Unexpected PPM frame size' }
+          for ($i = 0; $i -lt $header.Length; $i++) {
+            if ($bytes[$i] -ne $header[$i]) { throw 'Invalid PPM frame header' }
+          }
       - name: Upload native test frame
         uses: actions/upload-artifact@v4
         with:
           name: wmix-native-test-frame
-          path: ${{ runner.temp }}\\wmix-frame.ppm
+          path: ${{ runner.temp }}/wmix-frame.ppm
           if-no-files-found: error
       - name: Frontend tests
         run: npm test -- --run
