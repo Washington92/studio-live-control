@@ -6,7 +6,7 @@ export type NativeEngineEvent =
 export interface NativeEngineBridge {
   status(): Promise<{ ready: boolean }>;
   restart?(): Promise<{ restarted: boolean; reason?: string }>;
-  command(name: "STATUS" | "CUT" | "ADD_TEST_SOURCE" | "SOURCE_STATUS"): Promise<string>;
+  command(name: "STATUS" | "CUT" | "ADD_TEST_SOURCE" | "SOURCE_STATUS" | "PROGRAM_SOURCE_STATUS"): Promise<string>;
   onEvent(callback: (event: NativeEngineEvent) => void): () => void;
 }
 
@@ -45,12 +45,15 @@ export type NativeControlResponse =
   | { type: "error"; message: string }
   | { type: "source"; name: string }
   | { type: "source-status"; present: boolean; name: string }
+  | { type: "program-source-status"; present: boolean; name: string }
   | { type: "bye" };
 
 export function parseNativeControlResponse(line: string): NativeControlResponse {
   const message = line.trim();
   if (message === "READY WMIX_OBS_CONTROL_V1") return { type: "ready", version: "WMIX_OBS_CONTROL_V1" };
   if (message === "BYE") return { type: "bye" };
+  const programSourceStatus = /^PROGRAM_SOURCE_STATUS (PRESENT|ABSENT) (.+)$/.exec(message);
+  if (programSourceStatus) return { type: "program-source-status", present: programSourceStatus[1] === "PRESENT", name: programSourceStatus[2]! };
   const sourceStatus = /^SOURCE_STATUS (PRESENT|ABSENT) (.+)$/.exec(message);
   if (sourceStatus) return { type: "source-status", present: sourceStatus[1] === "PRESENT", name: sourceStatus[2]! };
   if (message.startsWith("OK SOURCE ")) return { type: "source", name: message.slice(10) };
