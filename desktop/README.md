@@ -115,8 +115,9 @@ pelo libobs.
 
 ## Ícone do Windows
 
-O pacote atual utiliza a identidade padrão do Electron no executável.
-Para personalizar o ícone de `WMix.exe`, precisamos adicionar ao projeto
-o arquivo original da marca em formato `.ico` com múltiplas resoluções e
-uma etapa de atualização do recurso de ícone do PE no workflow Windows.
-O favicon HTML, isoladamente, não altera o ícone do executável Windows.
+O pacote Windows agora inclui `desktop/assets/wmix-icon.png` e
+gera um `.ico` com múltiplos tamanhos durante o GitHub Actions.
+A etapa de empacotamento utiliza `rcedit` para gravar o ícone no recurso
+PE do `WMix.exe`, além de usar o PNG na janela Electron e no favicon
+do renderer offline. A alteração depende de uma **nova compilação bem-sucedida**;
+artefatos anteriores mantêm o ícone antigo.
