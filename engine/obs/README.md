@@ -105,3 +105,9 @@ PROGRAM_SOURCE_STATUS
 ```
 
 O resultado esperado é fonte presente no registro, ausente inicialmente no Program e presente depois do CUT, **desde que o plugin `color_source` e o runtime OBS funcionem**. Isso valida roteamento lógico, não transporte de quadros ou Tally visual. A execução Windows ainda não foi comprovada.
+
+## Teste de CUT pelo painel WMix
+
+Com o desktop Electron conectado, `TESTAR FONTE OBS` cria a fonte e consulta sua presença. `TESTAR CUT OBS` consulta `STATUS`, envia `CUT`, exige a resposta `OK CUT ...`, consulta novamente `STATUS` e verifica `PROGRAM_SOURCE_STATUS`. Os dois botões compartilham o bloqueio de operações simultâneas.
+
+**Importante:** este CUT é um teste isolado das cenas libobs. Ele **não** troca o Program web, não sincroniza o Tally das entradas da interface e não demonstra frames renderizados. Uma falha no comando não é apresentada como sucesso. Para validar a integração é necessário executar o aplicativo desktop no Windows com o motor compilado.
