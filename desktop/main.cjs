@@ -137,6 +137,12 @@ app.whenReady().then(() => {
   });
   window.webContents.on('render-process-gone', (_event, details) => {
     console.error('[WMix Desktop] Renderer process exited:', details.reason);
+    if (process.env.WMIX_SMOKE_TEST === '1') app.exit(6);
+  });
+  // Vite bundles can load index.html successfully while a JS chunk fails.
+  // Capture those failures in CI instead of accepting an empty interface.
+  window.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    if (level >= 2) console.error('[WMix Renderer]', message, sourceId, line);
   });
   // CI-only interactive renderer smoke check. It checks that React actually
   // mounted, rather than merely verifying that the HTML/JS files exist.
