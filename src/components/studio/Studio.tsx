@@ -901,7 +901,11 @@ function readDockSizes(): DockSizes {
       if (typeof columns === "number" && Number.isInteger(columns) && columns >= 2 && columns <= 12) defaults[id].columns = columns;
       if (typeof height === "number" && Number.isFinite(height)) defaults[id].height = Math.max(110, Math.min(1200, height));
       const width = (item as Partial<DockSize>).width;
-      if (typeof width === "number" && Number.isFinite(width)) defaults[id].width = Math.max(180, Math.min(1600, width));
+      if (typeof width === "number" && Number.isFinite(width)) {
+        // Persisted pixel widths must not break a narrower Lovable preview.
+        const available = Math.max(180, window.innerWidth - 32);
+        defaults[id].width = Math.max(180, Math.min(1600, available, width));
+      }
     }
   } catch { /* Invalid or inaccessible storage: use defaults. */ }
   return defaults;
