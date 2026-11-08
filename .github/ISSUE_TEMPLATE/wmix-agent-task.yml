@@ -1,0 +1,34 @@
+name: "WMix — tarefa para agente"
+description: "Tarefa incremental de desenvolvimento verificável"
+title: "[WMix] "
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema / objetivo
+      description: Descreva o comportamento atual e o resultado esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Escopo e arquivos afetados
+      description: Uma entrega pequena por Issue.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite verificáveis
+      description: Inclua os testes Windows/CI necessários.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Dependências, riscos e recursos externos
+      description: GPU, libobs SDK, hardware, credenciais ou permissões.
+    validations:
+      required: false
