@@ -33,3 +33,16 @@ describe("native engine bridge", () => {
     expect(window.wmixNative.command).toHaveBeenCalledWith("STATUS");
   });
 });
+
+import { parseNativeControlResponse } from "./native-engine";
+
+describe("native control protocol", () => {
+  it("parses confirmed CUT and current Program source", () => {
+    expect(parseNativeControlResponse("OK CUT PREVIEW")).toEqual({ type: "cut", ok: true, scene: "PREVIEW" });
+    expect(parseNativeControlResponse("STATUS PROGRAM")).toEqual({ type: "status", scene: "PROGRAM" });
+  });
+  it("does not mistake a failed CUT for success", () => {
+    expect(parseNativeControlResponse("ERROR CUT PROGRAM")).toEqual({ type: "cut", ok: false, scene: "PROGRAM" });
+    expect(parseNativeControlResponse("garbage").type).toBe("error");
+  });
+});
