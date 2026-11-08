@@ -37,7 +37,7 @@ jobs:
         shell: pwsh
         run: |
           $wmixEngine = (Resolve-Path 'engine/obs').Path.Replace('\', '/')
-          Add-Content -Path 'obs-upstream/CMakeLists.txt' -Encoding utf8 -Value "add_subdirectory(`"$wmixEngine`" `"${CMAKE_BINARY_DIR}/wmix-native`")"
+          Add-Content -Path 'obs-upstream/CMakeLists.txt' -Encoding utf8 -Value ('add_subdirectory("' + $wmixEngine + '" "${CMAKE_BINARY_DIR}/wmix-native")')
           Write-Host "Added native target from: $wmixEngine"
 
       - name: Configure libobs and WMix native engine
