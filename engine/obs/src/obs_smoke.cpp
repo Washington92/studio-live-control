@@ -156,8 +156,13 @@ int main(int argc, char** argv) {
                 // Real cameras and UI input IDs require a separate mapping protocol.
                 obs_source_t* existing = obs_get_source_by_name("WMix Test Color");
                 if (existing) {
+                  // A source in the OBS registry is not necessarily attached
+                  // to Preview; repair that state instead of falsely succeeding.
+                  obs_sceneitem_t* attached = obs_scene_find_source(preview, "WMix Test Color");
+                  if (!attached) attached = obs_scene_add(preview, existing);
+                  std::cout << (attached ? "OK SOURCE WMix Test Color" : "ERROR SOURCE_ATTACH")
+                            << std::endl;
                   obs_source_release(existing);
-                  std::cout << "OK SOURCE WMix Test Color" << std::endl;
                 } else {
                   obs_source_t* source = obs_source_create("color_source", "WMix Test Color", nullptr, nullptr);
                   if (!source) {
