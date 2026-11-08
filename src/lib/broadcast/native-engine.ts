@@ -40,7 +40,7 @@ export async function nativeEngineDiagnostics(): Promise<{
  */
 export type NativeControlResponse =
   | { type: "ready"; version: string }
-  | { type: "status"; scene: "PROGRAM" | "PREVIEW" }
+  | { type: "status"; scene: "PROGRAM" | "PREVIEW" | "UNKNOWN" }
   | { type: "cut"; ok: boolean; scene: "PROGRAM" | "PREVIEW" }
   | { type: "error"; message: string }
   | { type: "source"; name: string }
@@ -69,8 +69,8 @@ export function parseNativeControlResponse(line: string): NativeControlResponse 
   const sourceStatus = /^SOURCE_STATUS (PRESENT|ABSENT) (.+)$/.exec(message);
   if (sourceStatus) return { type: "source-status", present: sourceStatus[1] === "PRESENT", name: sourceStatus[2]! };
   if (message.startsWith("OK SOURCE ")) return { type: "source", name: message.slice(10) };
-  const status = /^STATUS (PROGRAM|PREVIEW)$/.exec(message);
-  if (status) return { type: "status", scene: status[1] as "PROGRAM" | "PREVIEW" };
+  const status = /^STATUS (PROGRAM|PREVIEW|UNKNOWN)$/.exec(message);
+  if (status) return { type: "status", scene: status[1] as "PROGRAM" | "PREVIEW" | "UNKNOWN" };
   const cut = /^(OK|ERROR) CUT (PROGRAM|PREVIEW)$/.exec(message);
   if (cut) return { type: "cut", ok: cut[1] === "OK", scene: cut[2] as "PROGRAM" | "PREVIEW" };
   if (message.startsWith("ERROR ")) return { type: "error", message: message.slice(6) };
