@@ -3,6 +3,10 @@ const { spawn } = require('node:child_process');
 const { createInterface } = require('node:readline');
 const path = require('node:path');
 
+// Consistent Windows app name and taskbar grouping for the branded portable build.
+app.setName('WMix Studio');
+if (process.platform === 'win32') app.setAppUserModelId('com.wmix.studio');
+
 const fs = require('node:fs');
 const { dialog } = require('electron');
 
