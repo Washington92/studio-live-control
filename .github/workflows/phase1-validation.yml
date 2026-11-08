@@ -34,6 +34,13 @@ jobs:
         run: cmake -S engine -B engine/build -DWMIX_WITH_LIBOBS=OFF
       - name: Build standalone native frame engine
         run: cmake --build engine/build --config Release
+      - name: Upload Windows native engine executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: WMix-Windows-Native-Engine-x64
+          path: engine/build/Release/wmix-engine.exe
+          if-no-files-found: error
+          retention-days: 30
       - name: Run native frame self-test
         run: ctest --test-dir engine/build -C Release --output-on-failure
       - name: Generate and validate a native test frame
