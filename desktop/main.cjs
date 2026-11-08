@@ -134,6 +134,28 @@ app.whenReady().then(() => {
   window.webContents.on('render-process-gone', (_event, details) => {
     console.error('[WMix Desktop] Renderer process exited:', details.reason);
   });
+  // CI-only interactive renderer smoke check. It checks that React actually
+  // mounted, rather than merely verifying that the HTML/JS files exist.
+  if (process.env.WMIX_SMOKE_TEST === '1') {
+    const timeout = setTimeout(() => {
+      console.error('[WMix Smoke] Renderer did not mount within 30 seconds');
+      app.exit(2);
+    }, 30000);
+    window.webContents.once('did-finish-load', async () => {
+      try {
+        const mounted = await window.webContents.executeJavaScript(
+          "new Promise(resolve => { const deadline = Date.now() + 15000; const check = () => { const root = document.getElementById('root'); if (root && root.children.length > 0) resolve(true); else if (Date.now() > deadline) resolve(false); else setTimeout(check, 200); }; check(); })"
+        );
+        clearTimeout(timeout);
+        console.log('[WMix Smoke] React mounted:', mounted);
+        app.exit(mounted ? 0 : 3);
+      } catch (error) {
+        clearTimeout(timeout);
+        console.error('[WMix Smoke] Renderer execution failed:', error);
+        app.exit(4);
+      }
+    });
+  }
   const url = process.env.WMIX_DEV_URL;
   if (url) {
     const parsed = new URL(url);
